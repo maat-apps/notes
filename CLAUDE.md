@@ -44,13 +44,19 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
 - A Playwright project's reusable test-helper file belongs at
   `e2e/utils.ts`, not `fixtures.ts` — these are plain functions specs call
   directly, not Playwright's own `test.extend()` fixture-injection system.
+- **Storage.** `src/lib/storage.ts` is the in-memory + IndexedDB
+  write-through store for notes (maat-core's `docs/storage.md`), read
+  through `src/hooks/use-notes.ts`. Notes are validated per entry
+  (`schemas.ts`); a note with no title and no content is never kept
+  (`note-utils.ts`'s `isEmptyNote`). Backups and the pre-update snapshot
+  share one format (`backup.ts`, `app-update.ts`).
 - **App lock.** Every maat-apps app has it (`@maat-apps/core/lock` +
   `@maat-apps/ui/app-lock-gate`, wrapped around the router in
-  `src/app/router.tsx`). `src/lib/app-lock.ts` wires it to settings; once
-  the app keeps data, connect its `data.rewrite`/`data.erase` to storage
-  and encrypt what storage persists with `src/lib/encryption-key.ts` (see
-  maat-core's `docs/storage.md`). **Never change `HKDF_INFO`** once users
-  have data.
+  `src/app/router.tsx`). `src/lib/app-lock.ts` rewrites the notes with the
+  current key and erases them plus the update snapshot; `storage.ts` and
+  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. **Never change
+  `HKDF_INFO` (`"notes-data-v1"`)** — existing encrypted notes would
+  become unreadable.
 - Full pattern log: none yet — run `/learn-patterns` after a non-trivial
   session to start one.
 
