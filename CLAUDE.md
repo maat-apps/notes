@@ -56,7 +56,11 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   saves on every change (no Save button); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so
   emptying it mid-edit (which deletes it) doesn't unmount the editor.
-  Checklist item operations are pure helpers in `lib/checklist-utils.ts`.
+  Checklist item operations are pure helpers in `lib/checklist-utils.ts`,
+  including one-level nesting: items stay one flat array, an `indented`
+  item belongs to the nearest top-level item above it (`parentId`,
+  `childIds`), and `shownIndented` decides what's drawn nested in each
+  rendered list.
   Search (`lib/note-search.ts`) matches every word in titles, text and
   checklist items, ignoring case and diacritics. Back uses
   `useSmartBack("/")`. Settings is a drawer

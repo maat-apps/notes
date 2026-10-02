@@ -1,37 +1,67 @@
-import { CaretDown, Plus, X } from "@phosphor-icons/react";
+import {
+  CaretDown,
+  Plus,
+  TextIndent,
+  TextOutdent,
+  X,
+} from "@phosphor-icons/react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { Button } from "@maat-apps/ui/button";
 import { Checkbox } from "@maat-apps/ui/checkbox";
 import { useTranslation } from "../../i18n/use-translation";
 import {
+  canIndent,
   createItem,
   insertItemAfter,
+  nextItemIndented,
   previousUncheckedId,
   removeItem,
+  setChecked,
+  setIndented,
+  shownIndented,
   splitItems,
   updateItem,
 } from "../../lib/checklist-utils";
 import type { ChecklistItem, ChecklistNote } from "../../lib/schemas";
 
+type IndentAction = "indent" | "outdent" | null;
+
+// Keeps the item's input focused when its indent button is tapped, so the
+// button (shown only for the focused item) doesn't vanish mid-tap.
+function keepFocus(event: { preventDefault: () => void }) {
+  event.preventDefault();
+}
+
 function ItemRow({
   item,
+  indented,
+  indentAction,
   inputRef,
+  onFocusChange,
   onText,
   onChecked,
   onEnter,
   onBackspaceEmpty,
+  onIndent,
   onRemove,
 }: {
   item: ChecklistItem;
+  /** Drawn nested under its parent. */
+  indented: boolean;
+  /** The indent button to offer while the item has focus. */
+  indentAction: IndentAction;
   inputRef: (element: HTMLInputElement | null) => void;
+  onFocusChange: (focused: boolean) => void;
   onText: (text: string) => void;
   onChecked: (checked: boolean) => void;
   onEnter: () => void;
   onBackspaceEmpty: () => void;
+  onIndent: (indented: boolean) => void;
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
+  const label = item.text || t("emptyItem");
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
@@ -40,14 +70,21 @@ function ItemRow({
     } else if (event.key === "Backspace" && item.text === "") {
       event.preventDefault();
       onBackspaceEmpty();
+    } else if (event.key === "Tab" && indentAction !== null) {
+      // A hardware keyboard nests with Tab, un-nests with Shift+Tab.
+      const indent = !event.shiftKey;
+      if (indent === (indentAction === "indent")) {
+        event.preventDefault();
+        onIndent(indent);
+      }
     }
   }
 
   return (
-    <li className="flex items-center gap-3">
+    <li className={`flex items-center gap-3 ${indented ? "pl-8" : ""}`}>
       <Checkbox
         checked={item.checked}
-        aria-label={t("itemDone", { item: item.text || t("emptyItem") })}
+        aria-label={t("itemDone", { item: label })}
         onCheckedChange={(checked) => onChecked(checked === true)}
       />
       <input
@@ -59,11 +96,30 @@ function ItemRow({
         enterKeyHint="next"
         onChange={(event) => onText(event.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={() => onFocusChange(true)}
+        onBlur={() => onFocusChange(false)}
       />
+      {indentAction && (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t(
+            indentAction === "indent" ? "indentItem" : "outdentItem",
+            {
+              item: label,
+            },
+          )}
+          onMouseDown={keepFocus}
+          onPointerDown={keepFocus}
+          onClick={() => onIndent(indentAction === "indent")}
+        >
+          {indentAction === "indent" ? <TextIndent /> : <TextOutdent />}
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
-        aria-label={t("removeItem", { item: item.text || t("emptyItem") })}
+        aria-label={t("removeItem", { item: label })}
         onClick={onRemove}
       >
         <X />
@@ -75,7 +131,8 @@ function ItemRow({
 /**
  * A checklist's items: unchecked first, checked ones below in a collapsible
  * section (PRODUCT.md). Enter adds the next item; Backspace on an empty
- * item removes it.
+ * item un-nests it, then removes it. The focused item offers a button to
+ * nest it under the item above (one level) or un-nest it.
  */
 export function ChecklistFields({
   note,
@@ -93,7 +150,12 @@ export function ChecklistFields({
     autoFocus ? (note.items[0]?.id ?? null) : null,
   );
   const [checkedOpen, setCheckedOpen] = useState(true);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const { unchecked, checked } = splitItems(note.items);
+  const indented = new Set([
+    ...shownIndented(note.items, unchecked),
+    ...shownIndented(note.items, checked),
+  ]);
 
   useEffect(() => {
     if (pendingFocus.current === null) return;
@@ -110,9 +172,18 @@ export function ChecklistFields({
   }
 
   function addItemAfter(afterId: string | null) {
-    const item = createItem();
+    const item = createItem(
+      "",
+      afterId !== null && nextItemIndented(note.items, afterId),
+    );
     focusAfterRender(item.id);
     setItems(insertItemAfter(note.items, afterId, item));
+  }
+
+  function indentActionFor(item: ChecklistItem): IndentAction {
+    if (item.id !== focusedId || item.checked) return null;
+    if (item.indented) return "outdent";
+    return canIndent(note.items, item.id) ? "indent" : null;
   }
 
   function renderItem(item: ChecklistItem) {
@@ -120,16 +191,30 @@ export function ChecklistFields({
       <ItemRow
         key={item.id}
         item={item}
+        indented={indented.has(item.id)}
+        indentAction={indentActionFor(item)}
+        onFocusChange={(focused) => {
+          if (focused) setFocusedId(item.id);
+          else
+            setFocusedId((current) => (current === item.id ? null : current));
+        }}
+        onIndent={(nested) =>
+          setItems(setIndented(note.items, item.id, nested))
+        }
         inputRef={(element) => {
           if (element) inputs.current.set(item.id, element);
           else inputs.current.delete(item.id);
         }}
         onText={(text) => setItems(updateItem(note.items, item.id, { text }))}
         onChecked={(isChecked) =>
-          setItems(updateItem(note.items, item.id, { checked: isChecked }))
+          setItems(setChecked(note.items, item.id, isChecked))
         }
         onEnter={() => addItemAfter(item.id)}
         onBackspaceEmpty={() => {
+          if (item.indented) {
+            setItems(setIndented(note.items, item.id, false));
+            return;
+          }
           focusAfterRender(previousUncheckedId(note.items, item.id));
           setItems(removeItem(note.items, item.id));
         }}

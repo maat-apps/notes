@@ -46,6 +46,8 @@
   "emptyItem": "empty item",
   "itemDone": "Done: {item}",
   "removeItem": "Remove {item}",
+  "indentItem": "Nest {item}",
+  "outdentItem": "Unnest {item}",
   "addItem": "List item",
   "pin": "Pin",
   "unpin": "Unpin",

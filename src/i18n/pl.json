@@ -46,6 +46,8 @@
   "emptyItem": "pusta pozycja",
   "itemDone": "Zrobione: {item}",
   "removeItem": "Usuń {item}",
+  "indentItem": "Zagnieźdź: {item}",
+  "outdentItem": "Wyciągnij poziom wyżej: {item}",
   "addItem": "Pozycja listy",
   "pin": "Przypnij",
   "unpin": "Odepnij",

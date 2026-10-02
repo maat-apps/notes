@@ -20,9 +20,25 @@ describe("parseNotes", () => {
     const note = {
       ...fields,
       type: "checklist",
-      items: [{ id: "i1", text: "Milk", checked: true }],
+      items: [{ id: "i1", text: "Milk", checked: true, indented: true }],
     };
     expect(parseNotes([note])).toEqual([note]);
+  });
+
+  it("reads an item saved before nesting, or a bad indent, as top-level", () => {
+    const [note] = parseNotes([
+      {
+        ...fields,
+        type: "checklist",
+        items: [
+          { id: "i1", text: "Old", checked: false },
+          { id: "i2", text: "Bad", checked: false, indented: "yes" },
+        ],
+      },
+    ]);
+    expect(note).toMatchObject({
+      items: [{ indented: false }, { indented: false }],
+    });
   });
 
   it("drops only the malformed checklist items", () => {

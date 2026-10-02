@@ -10,6 +10,10 @@ const ChecklistItemSchema = v.object({
   id: v.string(),
   text: v.fallback(v.string(), ""),
   checked: v.fallback(v.boolean(), false),
+  // One level of nesting: an indented item belongs to the nearest top-level
+  // item above it (checklist-utils.ts). Optional, so items saved before
+  // nesting existed stay valid.
+  indented: v.fallback(v.optional(v.boolean()), false),
 });
 
 const NoteFieldsSchema = v.object({
