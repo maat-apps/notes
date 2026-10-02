@@ -1,7 +1,7 @@
 {
-  "name": "notes",
-  "short_name": "notes",
-  "description": "notes",
+  "name": "Notes",
+  "short_name": "Notes",
+  "description": "Notes and checklists, kept on your device.",
   "start_url": "/notes/",
   "scope": "/notes/",
   "display": "standalone",
