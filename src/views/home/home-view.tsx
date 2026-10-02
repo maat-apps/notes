@@ -1,13 +1,15 @@
-import { Gear, Plus } from "@phosphor-icons/react";
+import { Gear, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { startTransition, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Button } from "@maat-apps/ui/button";
 import { EmptyState } from "@maat-apps/ui/empty-state";
 import { FabButton } from "@maat-apps/ui/fab-button";
+import { Input } from "@maat-apps/ui/input";
 import { PageHeader } from "@maat-apps/ui/page-header";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
+import { searchNotes } from "../../lib/note-search";
 import { groupNotes } from "../../lib/note-utils";
 import type { Note, NoteType } from "../../lib/schemas";
 import { SettingsDrawer } from "../settings/settings-drawer";
@@ -43,7 +45,9 @@ export function HomeView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const notes = useNotes();
-  const { pinned, others } = groupNotes(notes);
+  const [query, setQuery] = useState("");
+  const results = searchNotes(notes, query);
+  const { pinned, others } = groupNotes(results);
   const [newNoteOpen, setNewNoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -71,10 +75,31 @@ export function HomeView() {
           <Gear className="size-6" />
         </Button>
       </PageHeader>
+      {notes.length > 0 && (
+        <div className="relative">
+          <MagnifyingGlass
+            aria-hidden="true"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2"
+          />
+          <Input
+            type="search"
+            value={query}
+            aria-label={t("searchNotes")}
+            placeholder={t("searchNotes")}
+            className="pl-10"
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+      )}
       {notes.length === 0 ? (
         <EmptyState
           title={t("emptyTitle")}
           description={t("emptyDescription")}
+        />
+      ) : results.length === 0 ? (
+        <EmptyState
+          title={t("noMatchesTitle")}
+          description={t("noMatchesDescription")}
         />
       ) : (
         <>
