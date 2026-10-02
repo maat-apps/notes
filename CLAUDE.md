@@ -50,6 +50,17 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   (`schemas.ts`); a note with no title and no content is never kept
   (`note-utils.ts`'s `isEmptyNote`). Backups and the pre-update snapshot
   share one format (`backup.ts`, `app-update.ts`).
+- **Screens.** `src/app/router.tsx`: `/` (`views/home`: the list, pinned
+  section, FAB → `new-note-drawer.tsx`, settings drawer), `/new/:type` and
+  `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
+  saves on every change (no Save button); a new note only reaches storage
+  once it has content, and `NoteView` latches the note it opened so
+  emptying it mid-edit (which deletes it) doesn't unmount the editor.
+  Checklist item operations are pure helpers in `lib/checklist-utils.ts`.
+  Back uses `useSmartBack("/")`. Settings is a drawer
+  (`views/settings/`), one `settings-<name>-section.tsx` per card.
+- **E2E.** Views are lazy chunks: wait for the screen (e.g. the focused
+  first checklist item, `e2e/utils.ts`'s `newChecklist`) before typing.
 - **App lock.** Every maat-apps app has it (`@maat-apps/core/lock` +
   `@maat-apps/ui/app-lock-gate`, wrapped around the router in
   `src/app/router.tsx`). `src/lib/app-lock.ts` rewrites the notes with the

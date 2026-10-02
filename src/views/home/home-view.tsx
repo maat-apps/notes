@@ -1,100 +1,108 @@
-import { useEffect, useState } from "react";
+import { Gear, Plus } from "@phosphor-icons/react";
+import { startTransition, useState } from "react";
+import { useNavigate } from "react-router";
 
-import { useAppSettings } from "../../hooks/use-app-settings";
-import { useInstallPrompt } from "../../hooks/use-install-prompt";
+import { Button } from "@maat-apps/ui/button";
+import { EmptyState } from "@maat-apps/ui/empty-state";
+import { FabButton } from "@maat-apps/ui/fab-button";
+import { PageHeader } from "@maat-apps/ui/page-header";
+import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
-import { appLock } from "../../lib/app-lock";
-import { updateApp } from "../../lib/app-update";
+import { groupNotes } from "../../lib/note-utils";
+import type { Note, NoteType } from "../../lib/schemas";
+import { SettingsDrawer } from "../settings/settings-drawer";
 
-// A starting point, not a destination — this app's real Settings screen
-// (once it has one) is where install/update actions like these normally
-// live; see trainer's or routines' own settings-app-section.tsx and
-// settings-security-section.tsx for that pattern once this app is past its
-// first view.
+import { NewNoteDrawer } from "./new-note-drawer";
+import { NoteCard } from "./note-card";
+
+function NoteSection({
+  title,
+  notes,
+  onOpen,
+}: {
+  title?: string;
+  notes: Note[];
+  onOpen: (id: string) => void;
+}) {
+  if (notes.length === 0) return null;
+  return (
+    <section className="grid gap-2.5" aria-label={title}>
+      {title && (
+        <h2 className="text-muted-foreground m-0 px-1 text-xs font-semibold tracking-wide uppercase">
+          {title}
+        </h2>
+      )}
+      {notes.map((note) => (
+        <NoteCard key={note.id} note={note} onOpen={() => onOpen(note.id)} />
+      ))}
+    </section>
+  );
+}
+
 export function HomeView() {
   const { t } = useTranslation();
-  const install = useInstallPrompt();
-  const [updating, setUpdating] = useState(false);
-  const { lock } = useAppSettings();
-  const [lockSupported, setLockSupported] = useState(false);
-  const [lockError, setLockError] = useState(false);
+  const navigate = useNavigate();
+  const notes = useNotes();
+  const { pinned, others } = groupNotes(notes);
+  const [newNoteOpen, setNewNoteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    void appLock.isSupported().then((supported) => {
-      if (active) setLockSupported(supported);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  function open(id: string) {
+    startTransition(() => navigate(`/${encodeURIComponent(id)}`));
+  }
 
-  async function toggleAppLock() {
-    setLockError(false);
-    if (lock) {
-      appLock.disable();
-      return;
-    }
-    try {
-      await appLock.enrol();
-    } catch {
-      // Cancelling the platform prompt lands here too; leave the lock off.
-      setLockError(true);
-    }
+  function create(type: NoteType) {
+    setNewNoteOpen(false);
+    startTransition(() => navigate(`/new/${type}`));
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center gap-6 p-8 text-center">
-      <h1 className="text-xl">{t("welcome")}</h1>
-      <div className="flex flex-col gap-3 text-sm">
-        <div className="flex flex-col gap-1">
-          <span>
-            {install.state === "installed"
-              ? t("installAppInstalled")
-              : install.state === "available"
-                ? t("installAppDescription")
-                : t("installAppUnavailable")}
-          </span>
-          <button
-            type="button"
-            className="border-input rounded-lg border px-4 py-2 disabled:opacity-50"
-            disabled={install.state !== "available"}
-            onClick={() => void install.install()}
-          >
-            {t("installAppAction")}
-          </button>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span>
-            {lockSupported ? t("appLockDescription") : t("appLockUnsupported")}
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={lock !== null}
-            className="border-input rounded-lg border px-4 py-2 disabled:opacity-50"
-            disabled={!lockSupported}
-            onClick={() => void toggleAppLock()}
-          >
-            {t("appLock")}
-          </button>
-          {lockError && <span role="alert">{t("appLockFailed")}</span>}
-        </div>
-        <div className="flex flex-col gap-1">
-          <span>{t("updateAppDescription")}</span>
-          <button
-            type="button"
-            className="border-input rounded-lg border px-4 py-2 disabled:opacity-50"
-            disabled={updating}
-            onClick={() => {
-              setUpdating(true);
-              void updateApp();
-            }}
-          >
-            {updating ? t("updateAppBusy") : t("updateAppAction")}
-          </button>
-        </div>
-      </div>
-    </main>
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-5 px-5 pt-27 pb-[calc(96px+env(safe-area-inset-bottom))]">
+      <PageHeader>
+        <h1 className="font-heading m-0 text-3xl leading-[1.05] font-bold tracking-tight">
+          {t("appName")}
+        </h1>
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          aria-label={t("settings")}
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Gear className="size-6" />
+        </Button>
+      </PageHeader>
+      {notes.length === 0 ? (
+        <EmptyState
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+        />
+      ) : (
+        <>
+          <NoteSection
+            title={pinned.length > 0 ? t("pinned") : undefined}
+            notes={pinned}
+            onOpen={open}
+          />
+          <NoteSection
+            title={pinned.length > 0 ? t("others") : undefined}
+            notes={others}
+            onOpen={open}
+          />
+        </>
+      )}
+      <FabButton
+        className="fixed right-[max(20px,calc((100vw-480px)/2+20px))] bottom-[calc(20px+env(safe-area-inset-bottom))] z-20"
+        ariaLabel={t("newNote")}
+        onClick={() => setNewNoteOpen(true)}
+      >
+        <Plus className="size-6" />
+      </FabButton>
+      <NewNoteDrawer
+        open={newNoteOpen}
+        onOpenChange={setNewNoteOpen}
+        onCreate={create}
+      />
+      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </div>
   );
 }
