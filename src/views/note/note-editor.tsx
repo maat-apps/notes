@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import { AppBar } from "@maat-apps/ui/app-bar";
 import { Button } from "@maat-apps/ui/button";
 import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
-import { useSmartBack } from "../../hooks/use-smart-back";
+import { useSmartBack } from "@maat-apps/ui/smart-back";
 import { useTranslation } from "../../i18n/use-translation";
 import type { Note } from "../../lib/schemas";
 import {
