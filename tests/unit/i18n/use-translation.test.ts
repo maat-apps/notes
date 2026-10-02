@@ -14,7 +14,7 @@ describe("useTranslation", () => {
     const { result } = renderHook(() => useTranslation());
 
     expect(result.current.locale).toBe("en");
-    expect(result.current.t("welcome")).toBe("Welcome");
+    expect(result.current.t("appName")).toBe("Notes");
   });
 
   it("re-renders after setLocale", async () => {

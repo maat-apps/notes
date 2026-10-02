@@ -1,6 +1,9 @@
-import type { Note, NoteType } from "./schemas";
+import type { ChecklistNote, Note, NoteType, TextNote } from "./schemas";
 
 /** A fresh, empty note of the given type. */
+export function createNote(type: "text", now?: Date): TextNote;
+export function createNote(type: "checklist", now?: Date): ChecklistNote;
+export function createNote(type: NoteType, now?: Date): Note;
 export function createNote(type: NoteType, now = new Date()): Note {
   const fields = {
     id: crypto.randomUUID(),

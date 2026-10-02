@@ -40,3 +40,17 @@ describe("useNotes / useNote", () => {
     expect(result.current.one?.title).toBe("Ideas");
   });
 });
+
+describe("useNotesReady", () => {
+  it("turns true once the notes have loaded", async () => {
+    vi.resetModules();
+    const { useNotesReady } = await import("@/hooks/use-notes");
+    const storage = await import("@/lib/storage");
+    const { result } = renderHook(() => useNotesReady());
+
+    await act(() => storage.whenLoaded());
+
+    expect(result.current).toBe(true);
+    expect(storage.isNotesReadyOnServer()).toBe(false);
+  });
+});

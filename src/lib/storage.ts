@@ -26,6 +26,7 @@ const EMPTY: Note[] = [];
 const listeners = new Set<() => void>();
 let notes: Note[] = EMPTY;
 let loaded: Promise<void> | null = null;
+let ready = false;
 
 function emitChange(): void {
   for (const listener of listeners) {
@@ -51,6 +52,7 @@ async function loadNotes(): Promise<void> {
   } catch {
     // Keep what's in memory — same fallback as a corrupt or missing value.
   } finally {
+    ready = true;
     emitChange();
   }
 }
@@ -71,6 +73,19 @@ export function subscribe(listener: () => void): () => void {
 export function getNotesSnapshot(): Note[] {
   void whenLoaded();
   return notes;
+}
+
+/**
+ * Whether the initial read has finished — until then "no such note" can't be
+ * told apart from "not loaded yet" (a deep link to a note on a cold start).
+ */
+export function isNotesReady(): boolean {
+  void whenLoaded();
+  return ready;
+}
+
+export function isNotesReadyOnServer(): boolean {
+  return false;
 }
 
 export function getServerNotesSnapshot(): Note[] {
