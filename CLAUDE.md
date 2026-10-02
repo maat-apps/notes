@@ -57,7 +57,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   once it has content, and `NoteView` latches the note it opened so
   emptying it mid-edit (which deletes it) doesn't unmount the editor.
   Checklist item operations are pure helpers in `lib/checklist-utils.ts`.
-  Back uses `useSmartBack("/")`. Settings is a drawer
+  Search (`lib/note-search.ts`) matches every word in titles, text and
+  checklist items, ignoring case and diacritics. Back uses
+  `useSmartBack("/")`. Settings is a drawer
   (`views/settings/`), one `settings-<name>-section.tsx` per card.
 - **E2E.** Views are lazy chunks: wait for the screen (e.g. the focused
   first checklist item, `e2e/utils.ts`'s `newChecklist`) before typing.

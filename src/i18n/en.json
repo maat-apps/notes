@@ -63,5 +63,8 @@
   "restoreAction": "Restore",
   "restoreDone": "Notes restored.",
   "updateConfirmTitle": "Update now?",
-  "updateConfirmDescription": "The app reloads. Your notes are backed up first."
+  "updateConfirmDescription": "The app reloads. Your notes are backed up first.",
+  "searchNotes": "Search notes",
+  "noMatchesTitle": "No matching notes",
+  "noMatchesDescription": "Try different words."
 }
