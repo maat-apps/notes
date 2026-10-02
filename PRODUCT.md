@@ -20,6 +20,10 @@ Exactly two, each with an optional title:
 - **Checklist** — a list of items, each a line of text with a checkbox.
   Checked items drop below the unchecked ones into a collapsible
   "Checked items" section, as in Keep; unchecking moves an item back up.
+  Items nest one level deep, as in Keep: the focused item can be nested
+  under the one above (or un-nested); checking a parent checks its
+  children, unchecking a child unchecks its parent, and Backspace on an
+  empty nested item un-nests it before removing it.
 
 A note with neither a title nor any content is discarded instead of saved.
 
