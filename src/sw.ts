@@ -14,7 +14,7 @@ declare const self: ServiceWorkerGlobalScope & {
 
 registerAppWorker(self, {
   // Bump whenever the app shell changes — activation deletes every other cache.
-  cacheName: "notes-v2",
+  cacheName: "notes-v3",
   manifest: self.__WB_MANIFEST,
   // Not hardcoded: a PR preview under "/notes/pr-<n>/" caches its own shell.
   baseUrl: import.meta.env.BASE_URL,
