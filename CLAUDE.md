@@ -61,6 +61,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   checklist items, ignoring case and diacritics. Back uses
   `useSmartBack("/")`. Settings is a drawer
   (`views/settings/`), one `settings-<name>-section.tsx` per card.
+- **i18n.** `src/i18n/en.json` and `pl.json` (core's `createTranslation`;
+  the device language picks on first launch, Settings → Language after).
+  `t()` only accepts keys present in both — keep them in sync.
 - **E2E.** Views are lazy chunks: wait for the screen (e.g. the focused
   first checklist item, `e2e/utils.ts`'s `newChecklist`) before typing.
 - **App lock.** Every maat-apps app has it (`@maat-apps/core/lock` +

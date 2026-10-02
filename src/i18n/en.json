@@ -66,5 +66,20 @@
   "updateConfirmDescription": "The app reloads. Your notes are backed up first.",
   "searchNotes": "Search notes",
   "noMatchesTitle": "No matching notes",
-  "noMatchesDescription": "Try different words."
+  "noMatchesDescription": "Try different words.",
+  "language": "Language",
+  "sectionData": "Data",
+  "exportData": "Export notes",
+  "exportDataDescription": "Save a backup file of all your notes.",
+  "exportAction": "Export",
+  "exportShared": "Backup shared.",
+  "exportDone": "Backup downloaded.",
+  "importData": "Import notes",
+  "importDataDescription": "Replace your notes with a backup file.",
+  "importAction": "Import",
+  "importFailed": "That file isn't a notes backup.",
+  "importTitle": "Replace your notes?",
+  "importDescription": "Every note on this device is replaced by the backup's. This can't be undone.",
+  "importConfirm": "Replace",
+  "importDone": "Notes imported."
 }
