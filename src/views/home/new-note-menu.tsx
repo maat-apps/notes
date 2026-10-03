@@ -5,8 +5,7 @@ import { FabButton } from "@maat-apps/ui/fab-button";
 import { useTranslation } from "../../i18n/use-translation";
 import type { NoteType } from "../../lib/schemas";
 
-const FAB_POSITION =
-  "fixed right-[max(20px,calc((100vw-480px)/2+20px))] z-20";
+const FAB_POSITION = "fixed right-[max(20px,calc((100vw-480px)/2+20px))] z-20";
 
 function MenuItem({
   children,

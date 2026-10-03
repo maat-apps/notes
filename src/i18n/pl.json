@@ -47,6 +47,7 @@
   "emptyItem": "pusta pozycja",
   "itemDone": "Zrobione: {item}",
   "removeItem": "Usuń {item}",
+  "dragItem": "Zmień kolejność: {item}",
   "indentItem": "Zagnieźdź: {item}",
   "outdentItem": "Wyciągnij poziom wyżej: {item}",
   "addItem": "Pozycja listy",
