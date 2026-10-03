@@ -43,7 +43,10 @@ test("a backup exports and imports back", async ({ page }) => {
     mimeType: "text/plain",
     buffer: backup,
   });
-  await page.getByRole("button", { name: "Import", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Add notes from the backup?" })
+    .getByRole("button", { name: "Import" })
+    .click();
   await page.keyboard.press("Escape");
 
   await expect(page.getByRole("button", { name: /Keep me/ })).toBeVisible();
