@@ -77,11 +77,11 @@
   "exportShared": "Backup shared.",
   "exportDone": "Backup downloaded.",
   "importData": "Import notes",
-  "importDataDescription": "Replace your notes with a backup file.",
+  "importDataDescription": "Add the notes from a backup file to yours.",
   "importAction": "Import",
   "importFailed": "That file isn't a notes backup.",
-  "importTitle": "Replace your notes?",
-  "importDescription": "Every note on this device is replaced by the backup's. This can't be undone.",
-  "importConfirm": "Replace",
+  "importTitle": "Add notes from the backup?",
+  "importDescription": "Notes missing from this device are added. A note that is in both keeps its newer version. Nothing is deleted.",
+  "importConfirm": "Import",
   "importDone": "Notes imported."
 }

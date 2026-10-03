@@ -40,7 +40,8 @@ A note with neither a title nor any content is discarded instead of saved.
 - **Deleting.** Permanent, after a confirmation — there is no archive and
   no trash.
 - **Settings** (a drawer, as in routines): language (English/Polish), app
-  lock, backup export/import, install and update.
+  lock, backup export/import (import merges into the notes on the device;
+  it never replaces or deletes them), install and update.
 
 ## Out of scope, on purpose
 

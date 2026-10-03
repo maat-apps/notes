@@ -9,7 +9,7 @@ import {
 import { isRecord } from "@maat-apps/core/validation";
 
 import { parseNotes, type Note } from "./schemas";
-import { getNotesSnapshot, replaceAllNotes } from "./storage";
+import { getNotesSnapshot, mergeIntoNotes, replaceAllNotes } from "./storage";
 
 // notes' backup format on top of @maat-apps/core/backup, which handles the
 // envelope checks, the backup file and the download.
@@ -56,9 +56,14 @@ export function parseBackupValue(parsed: unknown): Backup {
   };
 }
 
-/** Overwrites every note with the backup's. */
+/** Overwrites every note with the backup's (restoring the update snapshot). */
 export function applyBackup(backup: Backup): void {
   replaceAllNotes(backup.data.notes);
+}
+
+/** Import from Settings: keeps the notes on the device and adds the backup's. */
+export function mergeBackup(backup: Backup): void {
+  mergeIntoNotes(backup.data.notes);
 }
 
 export function backupFileName(date = new Date()): string {
