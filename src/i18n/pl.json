@@ -77,11 +77,11 @@
   "exportShared": "Kopia udostępniona.",
   "exportDone": "Kopia pobrana.",
   "importData": "Importuj notatki",
-  "importDataDescription": "Zastąp notatki plikiem kopii zapasowej.",
+  "importDataDescription": "Dodaj notatki z pliku kopii zapasowej do swoich.",
   "importAction": "Importuj",
   "importFailed": "To nie jest kopia zapasowa notatek.",
-  "importTitle": "Zastąpić notatki?",
-  "importDescription": "Wszystkie notatki na tym urządzeniu zostaną zastąpione notatkami z kopii. Tego nie da się cofnąć.",
-  "importConfirm": "Zastąp",
+  "importTitle": "Dodać notatki z kopii?",
+  "importDescription": "Notatki, których brakuje na tym urządzeniu, zostaną dodane. Notatka obecna w obu miejscach zachowa nowszą wersję. Nic nie jest usuwane.",
+  "importConfirm": "Importuj",
   "importDone": "Notatki zaimportowane."
 }

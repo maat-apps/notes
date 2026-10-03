@@ -11,7 +11,7 @@ import {
 } from "./app-settings";
 import { encryptionKey } from "./encryption-key";
 import { kvGet, kvSet } from "./idb-store";
-import { isEmptyNote } from "./note-utils";
+import { isEmptyNote, mergeNotes } from "./note-utils";
 import { parseNotes, type Note } from "./schemas";
 import { DATA_KEY } from "./storage-keys";
 
@@ -110,6 +110,11 @@ function writeNotes(next: Note[]): void {
 /** Replaces every note — backup import and the app lock's rewrite/erase. */
 export function replaceAllNotes(next: Note[]): void {
   writeNotes(next);
+}
+
+/** Adds the notes the device lacks and keeps the newer copy of the rest. */
+export function mergeIntoNotes(incoming: Note[]): void {
+  writeNotes(mergeNotes(getNotesSnapshot(), incoming));
 }
 
 /**

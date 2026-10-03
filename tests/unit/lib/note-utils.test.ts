@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createNote, groupNotes, isEmptyNote } from "@/lib/note-utils";
+import {
+  createNote,
+  groupNotes,
+  isEmptyNote,
+  mergeNotes,
+} from "@/lib/note-utils";
 import type { Note } from "@/lib/schemas";
 
 const NOW = new Date("2026-10-01T10:00:00.000Z");
@@ -74,5 +79,32 @@ describe("groupNotes", () => {
 
     expect(pinnedNotes.map((note) => note.id)).toEqual(["pin"]);
     expect(others.map((note) => note.id)).toEqual(["new", "old"]);
+  });
+});
+
+describe("mergeNotes", () => {
+  const older = textNote({ id: "a", title: "Older", updatedAt: "2026-10-01" });
+  const newer = textNote({ id: "a", title: "Newer", updatedAt: "2026-10-02" });
+  const other = textNote({ id: "b", title: "Other" });
+
+  it("adds the incoming notes the current ones lack", () => {
+    expect(mergeNotes([older], [other])).toEqual([older, other]);
+  });
+
+  it("keeps a note missing from the incoming ones", () => {
+    expect(mergeNotes([older, other], [])).toEqual([older, other]);
+  });
+
+  it("takes the incoming copy when it is newer", () => {
+    expect(mergeNotes([older], [newer])).toEqual([newer]);
+  });
+
+  it("keeps the current copy when it is newer", () => {
+    expect(mergeNotes([newer], [older])).toEqual([newer]);
+  });
+
+  it("keeps the current copy on a tie", () => {
+    const twin = { ...older, title: "Twin" };
+    expect(mergeNotes([older], [twin])).toEqual([older]);
   });
 });

@@ -37,6 +37,22 @@ describe("backup", () => {
     expect(storage.getNotesSnapshot()).toHaveLength(1);
   });
 
+  it("merges a backup into the notes already on the device", async () => {
+    const { storage, backup } = await freshBackup();
+    storage.saveNote(note);
+    const text = JSON.stringify(backup.createBackup());
+    storage.deleteNote(note.id);
+    const local = { ...note, id: "n2", title: "Local" };
+    storage.saveNote(local);
+
+    backup.mergeBackup(backup.parseBackup(text));
+
+    expect(storage.getNotesSnapshot().map((item) => item.id)).toEqual([
+      "n2",
+      "n1",
+    ]);
+  });
+
   it("rejects another app's backup", async () => {
     const { backup } = await freshBackup();
     const other = JSON.stringify({
