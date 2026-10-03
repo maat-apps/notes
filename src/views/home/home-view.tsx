@@ -1,10 +1,9 @@
-import { Gear, MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { Gear, MagnifyingGlass } from "@phosphor-icons/react";
 import { startTransition, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { Button } from "@maat-apps/ui/button";
 import { EmptyState } from "@maat-apps/ui/empty-state";
-import { FabButton } from "@maat-apps/ui/fab-button";
 import { Input } from "@maat-apps/ui/input";
 import { PageHeader } from "@maat-apps/ui/page-header";
 import { useNotes } from "../../hooks/use-notes";
@@ -14,7 +13,7 @@ import { groupNotes } from "../../lib/note-utils";
 import type { Note, NoteType } from "../../lib/schemas";
 import { SettingsDrawer } from "../settings/settings-drawer";
 
-import { NewNoteDrawer } from "./new-note-drawer";
+import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 
 function NoteSection({
@@ -115,14 +114,7 @@ export function HomeView() {
           />
         </>
       )}
-      <FabButton
-        className="fixed right-[max(20px,calc((100vw-480px)/2+20px))] bottom-[calc(20px+env(safe-area-inset-bottom))] z-20"
-        ariaLabel={t("newNote")}
-        onClick={() => setNewNoteOpen(true)}
-      >
-        <Plus className="size-6" />
-      </FabButton>
-      <NewNoteDrawer
+      <NewNoteMenu
         open={newNoteOpen}
         onOpenChange={setNewNoteOpen}
         onCreate={create}
