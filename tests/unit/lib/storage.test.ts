@@ -230,3 +230,38 @@ describe("edge cases", () => {
     expect(storage.getNotesSnapshot()).toHaveLength(1);
   });
 });
+
+describe("setNoteOrder", () => {
+  it("ranks the notes in the given order", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.saveNote(note({ id: "b" }));
+
+    storage.setNoteOrder(["b", "a"]);
+
+    const ranks = Object.fromEntries(
+      storage.getNotesSnapshot().map((item) => [item.id, item.rank]),
+    );
+    expect(ranks).toEqual({ b: 0, a: 1 });
+  });
+
+  it("sends an edited note back to the top by dropping its rank", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.setNoteOrder(["a"]);
+
+    storage.saveNote(note({ id: "a", title: "Renamed", rank: 0 }));
+
+    expect(storage.getNotesSnapshot()[0].rank).toBeUndefined();
+  });
+
+  it("keeps the order when a note is pinned", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.setNoteOrder(["a"]);
+
+    storage.setPinned("a", true);
+
+    expect(storage.getNotesSnapshot()[0].rank).toBe(0);
+  });
+});

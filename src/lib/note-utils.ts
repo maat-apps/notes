@@ -28,13 +28,23 @@ export function isEmptyNote(note: Note): boolean {
     : note.items.every((item) => !item.text.trim());
 }
 
-function byMostRecentlyEdited(a: Note, b: Note): number {
-  return b.updatedAt.localeCompare(a.updatedAt);
+/**
+ * The list's order: notes without a `rank` (new, edited or never dragged)
+ * first, most recently edited first, then the dragged-into-place notes by
+ * their rank.
+ */
+function byListOrder(a: Note, b: Note): number {
+  if (a.rank === undefined && b.rank === undefined) {
+    return b.updatedAt.localeCompare(a.updatedAt);
+  }
+  if (a.rank === undefined) return -1;
+  if (b.rank === undefined) return 1;
+  return a.rank - b.rank;
 }
 
-/** The list's two sections, each most recently edited first. */
+/** The list's two sections, each in list order. */
 export function groupNotes(notes: Note[]): { pinned: Note[]; others: Note[] } {
-  const sorted = [...notes].sort(byMostRecentlyEdited);
+  const sorted = [...notes].sort(byListOrder);
   return {
     pinned: sorted.filter((note) => note.pinned),
     others: sorted.filter((note) => !note.pinned),
