@@ -47,6 +47,8 @@
   "emptyItem": "pusta pozycja",
   "itemDone": "Zrobione: {item}",
   "removeItem": "Usuń {item}",
+  "links": "Linki",
+  "openLink": "Otwórz {link}",
   "dragItem": "Zmień kolejność: {item}",
   "indentItem": "Zagnieźdź: {item}",
   "outdentItem": "Wyciągnij poziom wyżej: {item}",

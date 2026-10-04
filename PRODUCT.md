@@ -15,9 +15,10 @@ web - PWA, mobile-only (like routines and trainer).
 
 Exactly two, each with an optional title:
 
-- **Text note** — a plain-text body. No formatting, no images. Links in the
-  body are tappable and open in the browser; there is no fetched preview
-  (it would need a server and leak the URLs).
+- **Text note** — a plain-text body. No formatting, no images. The web
+  links in the body are listed below it as tappable chips that open in the
+  browser (a textarea can't hold a tappable link); there is no fetched
+  preview (it would need a server and leak the URLs).
 - **Checklist** — a list of items, each a line of text with a checkbox.
   Checked items drop below the unchecked ones into a collapsible
   "Checked items" section, as in Keep; unchecking moves an item back up.
@@ -28,7 +29,8 @@ Exactly two, each with an optional title:
   Each item has a drag handle on the left to reorder it (a parent moves
   together with its children) and a delete button on the right. A
   "+ List item" row ends the unchecked items, as in Keep; Enter on an
-  item also adds a new one below.
+  item also adds a new one below. An item that contains a web link gets a
+  button that opens it.
 
 A note with neither a title nor any content is discarded instead of saved.
 

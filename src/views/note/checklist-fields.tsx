@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowSquareOut,
   CaretDown,
   DotsSixVertical,
   Plus,
@@ -48,6 +49,7 @@ import {
   splitItems,
   updateItem,
 } from "../../lib/checklist-utils";
+import { findLinks, linkLabel } from "../../lib/links";
 import type { ChecklistItem, ChecklistNote } from "../../lib/schemas";
 
 type IndentAction = "indent" | "outdent" | null;
@@ -99,6 +101,7 @@ function ItemRow({
 }) {
   const { t } = useTranslation();
   const label = item.text || t("emptyItem");
+  const link = findLinks(item.text)[0];
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
@@ -146,6 +149,17 @@ function ItemRow({
           onFocus={() => onFocusChange(true)}
           onBlur={() => onFocusChange(false)}
         />
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("openLink", { link: linkLabel(link) })}
+            className="hover:bg-muted active:bg-muted flex size-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <ArrowSquareOut aria-hidden="true" className="size-5" />
+          </a>
+        )}
         {indentAction && (
           <Button
             variant="ghost"
