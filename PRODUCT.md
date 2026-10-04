@@ -46,7 +46,11 @@ A note with neither a title nor any content is discarded instead of saved.
   rest.
 - **Search.** Filters the list by title, text body and checklist items.
 - **Editing.** Opening a note edits it in place; changes save
-  automatically, with no "Save" button.
+  automatically, with no "Save" button. A bar along the bottom has undo and
+  redo (a quick burst of typing is one step; they last for the editing
+  session), when the note was last edited, and a "More" menu: make a copy,
+  switch between text and checklist ("Show/Hide checkboxes", which can be
+  undone) and delete.
 - **Deleting.** Permanent, after a confirmation — there is no archive and
   no trash, so there is no undo either. Applies to notes and, via its
   delete button, to checklist items (items go without a confirmation —

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { createNote, groupNotes, isEmptyNote } from "@/lib/note-utils";
+import {
+  convertNote,
+  createNote,
+  duplicateNote,
+  groupNotes,
+  isEmptyNote,
+} from "@/lib/note-utils";
 import type { Note } from "@/lib/schemas";
 
 const NOW = new Date("2026-10-01T10:00:00.000Z");
@@ -104,5 +110,93 @@ describe("groupNotes order", () => {
       at("fresh", "2026-10-01T07:00:00.000Z"),
     ]);
     expect(ids(others)).toEqual(["fresh", "ranked"]);
+  });
+});
+
+describe("duplicateNote", () => {
+  it("copies the content into a new, unpinned note", () => {
+    const original = textNote({
+      title: "Ideas",
+      body: "x",
+      pinned: true,
+      rank: 3,
+    } as Partial<Note>);
+    const later = new Date("2026-10-02T10:00:00.000Z");
+
+    const copy = duplicateNote(original, later);
+
+    expect(copy).toMatchObject({
+      type: "text",
+      title: "Ideas",
+      body: "x",
+      pinned: false,
+      rank: undefined,
+    });
+    expect(copy.id).not.toBe(original.id);
+    expect(copy.updatedAt).toBe(later.toISOString());
+  });
+});
+
+describe("convertNote", () => {
+  const checklist = (items: [string, boolean?, boolean?][]): Note => ({
+    ...createNote("checklist", NOW),
+    title: "T",
+    pinned: true,
+    items: items.map(([text, checked = false, indented = false], index) => ({
+      id: `i${index}`,
+      text,
+      checked,
+      indented,
+    })),
+  });
+
+  it("turns checklist items into lines, nested ones indented", () => {
+    const converted = convertNote(
+      checklist([["Milk"], ["Whole", true, true], ["Bread"]]),
+    );
+    expect(converted).toMatchObject({
+      type: "text",
+      title: "T",
+      pinned: true,
+      body: "Milk\n  Whole\nBread",
+    });
+  });
+
+  it("skips empty items going to text", () => {
+    const converted = convertNote(checklist([["Milk"], [""], ["  "]]));
+    expect(converted).toMatchObject({ body: "Milk" });
+  });
+
+  it("turns lines into checklist items, indented lines nested", () => {
+    const converted = convertNote(
+      textNote({ body: "Milk\n  Whole\n\nBread" } as Partial<Note>),
+    );
+    expect(converted.type).toBe("checklist");
+    const items = (converted as Extract<Note, { type: "checklist" }>).items;
+    expect(items.map((item) => [item.text, item.indented])).toEqual([
+      ["Milk", false],
+      ["Whole", true],
+      ["Bread", false],
+    ]);
+  });
+
+  it("never nests the first item", () => {
+    const converted = convertNote(
+      textNote({ body: "  Indented first" } as Partial<Note>),
+    );
+    const items = (converted as Extract<Note, { type: "checklist" }>).items;
+    expect(items[0].indented).toBe(false);
+  });
+
+  it("gives an empty text note one empty item to type into", () => {
+    const converted = convertNote(textNote());
+    expect(
+      (converted as Extract<Note, { type: "checklist" }>).items,
+    ).toHaveLength(1);
+  });
+
+  it("keeps the id, so the stored note is replaced", () => {
+    const original = textNote({ body: "a" } as Partial<Note>);
+    expect(convertNote(original).id).toBe(original.id);
   });
 });

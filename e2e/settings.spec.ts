@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { expect, test } from "@playwright/test";
 
-import { createTextNote, goHome, openSettings } from "./utils";
+import { createTextNote, deleteOpenNote, goHome, openSettings } from "./utils";
 
 test("switching to Polish translates the app", async ({ page }) => {
   await goHome(page);
@@ -31,8 +31,7 @@ test("a backup exports and imports back", async ({ page }) => {
   // Wipe by deleting the note, then bring it back from the file.
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: /Keep me/ }).click();
-  await page.getByRole("button", { name: "Delete note" }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await deleteOpenNote(page);
   await expect(
     page.getByRole("heading", { name: "No notes yet" }),
   ).toBeVisible();

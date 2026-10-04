@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { createTextNote, goHome } from "./utils";
+import { createTextNote, deleteOpenNote, goHome } from "./utils";
 
 test("a text note saves as you type and shows in the list", async ({
   page,
@@ -53,8 +53,7 @@ test("deleting a note asks first, then removes it for good", async ({
   await createTextNote(page, { title: "Old idea" });
 
   await page.getByRole("button", { name: /Old idea/ }).click();
-  await page.getByRole("button", { name: "Delete note" }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await deleteOpenNote(page);
 
   await expect(
     page.getByRole("heading", { name: "No notes yet" }),
