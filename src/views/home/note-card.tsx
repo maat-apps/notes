@@ -5,7 +5,7 @@ import { useTranslation } from "../../i18n/use-translation";
 import { shownIndented, splitItems } from "../../lib/checklist-utils";
 import type { Note } from "../../lib/schemas";
 
-const PREVIEW_ITEMS = 5;
+const PREVIEW_ITEMS = 8;
 
 function ChecklistPreview({
   note,
@@ -18,13 +18,13 @@ function ChecklistPreview({
   const indented = shownIndented(note.items, shown);
   const hidden = unchecked.length - shown.length;
   return (
-    <ul className="m-0 grid list-none gap-1 p-0">
+    <ul className="m-0 grid list-none gap-2.5 p-0">
       {shown.map((item) => (
         <li
           key={item.id}
           className={`flex items-start gap-2 ${indented.has(item.id) ? "pl-6" : ""}`}
         >
-          <Square aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <Square aria-hidden="true" className="mt-1 size-5 shrink-0" />
           <span className="min-w-0 break-words">{item.text}</span>
         </li>
       ))}
@@ -35,7 +35,7 @@ function ChecklistPreview({
       )}
       {checked.length > 0 && (
         <li className="text-muted-foreground flex items-center gap-2">
-          <CheckSquare aria-hidden="true" className="size-4 shrink-0" />
+          <CheckSquare aria-hidden="true" className="size-5 shrink-0" />
           {t("checkedItemsCount", { count: checked.length })}
         </li>
       )}
@@ -46,15 +46,15 @@ function ChecklistPreview({
 /** One note in the list: its title (if any) and a preview of its content. */
 export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
   return (
-    <ListRow onClick={onOpen} className="items-start">
-      <div className="grid min-w-0 flex-1 gap-1.5 text-left text-sm">
+    <ListRow onClick={onOpen} className="items-start rounded-3xl px-5 py-6">
+      <div className="grid min-w-0 flex-1 gap-3 text-left text-lg">
         {note.title && (
-          <h3 className="m-0 text-base font-semibold break-words">
+          <h3 className="m-0 text-lg font-semibold break-words">
             {note.title}
           </h3>
         )}
         {note.type === "text" ? (
-          <p className="text-muted-foreground m-0 line-clamp-6 break-words whitespace-pre-line">
+          <p className="m-0 line-clamp-10 break-words whitespace-pre-line">
             {note.body}
           </p>
         ) : (

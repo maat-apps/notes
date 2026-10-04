@@ -92,9 +92,9 @@ function NoteSection({
   );
 
   return (
-    <section className="grid gap-2.5" aria-label={title}>
+    <section className="grid gap-4" aria-label={title}>
       {title && (
-        <h2 className="text-muted-foreground m-0 px-1 text-xs font-semibold tracking-wide uppercase">
+        <h2 className="text-muted-foreground m-0 px-4 text-base font-medium">
           {title}
         </h2>
       )}
