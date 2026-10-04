@@ -104,6 +104,19 @@ describe("groupNotes order", () => {
     expect(ids(others)).toEqual(["b", "a"]);
   });
 
+  it("puts notes without a rank above the dragged ones, in any input order", () => {
+    const fresh = at("fresh", "2026-10-01T07:00:00.000Z");
+    const ranked = at("ranked", "2026-10-01T09:00:00.000Z", 0);
+    expect(ids(groupNotes([fresh, ranked]).others)).toEqual([
+      "fresh",
+      "ranked",
+    ]);
+    expect(ids(groupNotes([ranked, fresh]).others)).toEqual([
+      "fresh",
+      "ranked",
+    ]);
+  });
+
   it("puts notes without a rank above the dragged ones", () => {
     const { others } = groupNotes([
       at("ranked", "2026-10-01T09:00:00.000Z", 0),

@@ -45,6 +45,12 @@ describe("findLinks", () => {
     expect(findLinks("")).toEqual([]);
   });
 
+  it("skips text that only looks like a link", () => {
+    expect(findLinks("broken http://[nope and https://ok.com")).toEqual([
+      "https://ok.com",
+    ]);
+  });
+
   it("finds a link on its own line of a longer note", () => {
     expect(findLinks("Buy milk\nhttps://shop.example/milk\nthanks")).toEqual([
       "https://shop.example/milk",

@@ -28,7 +28,6 @@ function sameContent(a: unknown, b: unknown): boolean {
 
 /** The single text field `next` edits in `prev`, or `null` for anything else. */
 function editedField(prev: Note, next: Note): string | null {
-  if (prev.type !== next.type) return null;
   if (prev.title !== next.title) {
     return sameContent({ ...prev, title: next.title }, next) ? "title" : null;
   }

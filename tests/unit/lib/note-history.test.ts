@@ -103,6 +103,57 @@ describe("recordChange", () => {
     expect(history.past).toHaveLength(2);
   });
 
+  it("never absorbs a change that touches two items at once", () => {
+    let history = recordChange(
+      EMPTY_HISTORY,
+      list(["a", "b"]),
+      list(["ax", "bx"]),
+      0,
+    );
+    history = recordChange(
+      history,
+      list(["ax", "bx"]),
+      list(["axy", "bxy"]),
+      100,
+    );
+    expect(history.past).toHaveLength(2);
+  });
+
+  it("never absorbs an item swapped for another", () => {
+    const swapped = list(["a"]);
+    swapped.items[0] = { ...swapped.items[0], id: "other", text: "b" };
+    let history = recordChange(EMPTY_HISTORY, list(["a"]), swapped, 0);
+    history = recordChange(history, swapped, list(["a"]), 100);
+    expect(history.past).toHaveLength(2);
+  });
+
+  it("never absorbs a title edit that also changes the body", () => {
+    let history = recordChange(
+      EMPTY_HISTORY,
+      text(),
+      text({ title: "T", body: "b" }),
+      0,
+    );
+    history = recordChange(
+      history,
+      text({ title: "T", body: "b" }),
+      text({ title: "TT", body: "bb" }),
+      100,
+    );
+    expect(history.past).toHaveLength(2);
+  });
+
+  it("never absorbs a change of the note's type", () => {
+    let history = recordChange(
+      EMPTY_HISTORY,
+      text({ body: "a" }),
+      list(["a"]),
+      0,
+    );
+    history = recordChange(history, list(["a"]), text({ body: "a" }), 100);
+    expect(history.past).toHaveLength(2);
+  });
+
   it("drops what could be redone", () => {
     const first = recordChange(EMPTY_HISTORY, text(), text({ body: "a" }), 0);
     const undone = undo(first, text({ body: "a" }))!;
