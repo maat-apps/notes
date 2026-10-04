@@ -140,3 +140,15 @@ test("an item is reordered by dragging its handle", async ({ page }) => {
   await expect(items.nth(1)).toHaveValue("Eggs");
   await expect(items.nth(2)).toHaveValue("Milk");
 });
+
+test("an item with a link gets a button that opens it", async ({ page }) => {
+  await goHome(page);
+  await newChecklist(page);
+  await page.keyboard.type("Buy at https://shop.example/milk");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Plain item");
+
+  const open = page.getByRole("link", { name: "Open shop.example/milk" });
+  await expect(open).toHaveAttribute("href", "https://shop.example/milk");
+  await expect(page.getByRole("link")).toHaveCount(1);
+});

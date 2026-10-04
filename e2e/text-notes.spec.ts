@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { createTextNote, goHome } from "./utils";
+import { createTextNote, deleteOpenNote, goHome } from "./utils";
 
 test("a text note saves as you type and shows in the list", async ({
   page,
@@ -53,8 +53,7 @@ test("deleting a note asks first, then removes it for good", async ({
   await createTextNote(page, { title: "Old idea" });
 
   await page.getByRole("button", { name: /Old idea/ }).click();
-  await page.getByRole("button", { name: "Delete note" }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await deleteOpenNote(page);
 
   await expect(
     page.getByRole("heading", { name: "No notes yet" }),
@@ -70,4 +69,30 @@ test("a stale link shows a way back", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Notes", exact: true }),
   ).toBeVisible();
+});
+
+test("a link in a text note opens from a chip below the body", async ({
+  page,
+}) => {
+  await goHome(page);
+  await createTextNote(page, {
+    title: "Reading",
+    body: "Read this: https://example.com/article, then call.",
+  });
+  await page.getByRole("button", { name: /Reading/ }).click();
+
+  const link = page
+    .getByRole("list", { name: "Links" })
+    .getByRole("link", { name: "example.com/article" });
+  await expect(link).toHaveAttribute("href", "https://example.com/article");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", /noopener/);
+});
+
+test("a note without a link shows no link list", async ({ page }) => {
+  await goHome(page);
+  await createTextNote(page, { title: "Plain", body: "No links here." });
+  await page.getByRole("button", { name: /Plain/ }).click();
+
+  await expect(page.getByRole("list", { name: "Links" })).toHaveCount(0);
 });

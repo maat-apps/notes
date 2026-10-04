@@ -26,6 +26,13 @@ export async function createTextNote(
   await page.getByRole("button", { name: "Back" }).click();
 }
 
+/** Deletes the note that is open, through the menu and its confirmation. */
+export async function deleteOpenNote(page: Page) {
+  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("button", { name: "Delete note" }).click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+}
+
 /** Opens a new checklist and waits until its first item has focus. */
 export async function newChecklist(page: Page) {
   await page.getByRole("button", { name: "New note" }).click();

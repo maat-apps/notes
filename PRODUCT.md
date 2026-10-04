@@ -15,9 +15,10 @@ web - PWA, mobile-only (like routines and trainer).
 
 Exactly two, each with an optional title:
 
-- **Text note** — a plain-text body. No formatting, no images. Links in the
-  body are tappable and open in the browser; there is no fetched preview
-  (it would need a server and leak the URLs).
+- **Text note** — a plain-text body. No formatting, no images. The web
+  links in the body are listed below it as tappable chips that open in the
+  browser (a textarea can't hold a tappable link); there is no fetched
+  preview (it would need a server and leak the URLs).
 - **Checklist** — a list of items, each a line of text with a checkbox.
   Checked items drop below the unchecked ones into a collapsible
   "Checked items" section, as in Keep; unchecking moves an item back up.
@@ -28,7 +29,8 @@ Exactly two, each with an optional title:
   Each item has a drag handle on the left to reorder it (a parent moves
   together with its children) and a delete button on the right. A
   "+ List item" row ends the unchecked items, as in Keep; Enter on an
-  item also adds a new one below.
+  item also adds a new one below. An item that contains a web link gets a
+  button that opens it.
 
 A note with neither a title nor any content is discarded instead of saved.
 
@@ -44,7 +46,11 @@ A note with neither a title nor any content is discarded instead of saved.
   rest.
 - **Search.** Filters the list by title, text body and checklist items.
 - **Editing.** Opening a note edits it in place; changes save
-  automatically, with no "Save" button.
+  automatically, with no "Save" button. A bar along the bottom has undo and
+  redo (a quick burst of typing is one step; they last for the editing
+  session), when the note was last edited, and a "More" menu: make a copy,
+  switch between text and checklist ("Show/Hide checkboxes", which can be
+  undone) and delete.
 - **Deleting.** Permanent, after a confirmation — there is no archive and
   no trash, so there is no undo either. Applies to notes and, via its
   delete button, to checklist items (items go without a confirmation —

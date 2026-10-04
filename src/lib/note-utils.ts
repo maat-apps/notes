@@ -1,3 +1,4 @@
+import { createItem } from "./checklist-utils";
 import type { ChecklistNote, Note, NoteType, TextNote } from "./schemas";
 
 /** A fresh, empty note of the given type. */
@@ -48,5 +49,51 @@ export function groupNotes(notes: Note[]): { pinned: Note[]; others: Note[] } {
   return {
     pinned: sorted.filter((note) => note.pinned),
     others: sorted.filter((note) => !note.pinned),
+  };
+}
+
+/** A copy of `note` as a new, unpinned note at the top of the list. */
+export function duplicateNote(note: Note, now = new Date()): Note {
+  return {
+    ...note,
+    id: crypto.randomUUID(),
+    pinned: false,
+    rank: undefined,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  };
+}
+
+function sharedFields(note: Note) {
+  const { id, title, pinned, createdAt, updatedAt, rank } = note;
+  return { id, title, pinned, createdAt, updatedAt, rank };
+}
+
+const NESTED_LINE = /^\s{2,}/;
+
+/**
+ * The note as the other type: a text note's lines become checklist items
+ * (indented lines nest) and a checklist's items become lines (nested ones
+ * indented). Checked state is dropped going to text; empty lines are dropped
+ * going to a checklist. Title, id and pin stay.
+ */
+export function convertNote(note: Note): Note {
+  if (note.type === "checklist") {
+    const body = note.items
+      .filter((item) => item.text.trim())
+      .map((item) => `${item.indented ? "  " : ""}${item.text}`)
+      .join("\n");
+    return { ...sharedFields(note), type: "text", body };
+  }
+  const items = note.body
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line, index) =>
+      createItem(line.trim(), index > 0 && NESTED_LINE.test(line)),
+    );
+  return {
+    ...sharedFields(note),
+    type: "checklist",
+    items: items.length > 0 ? items : [createItem()],
   };
 }
