@@ -76,3 +76,33 @@ describe("groupNotes", () => {
     expect(others.map((note) => note.id)).toEqual(["new", "old"]);
   });
 });
+
+describe("groupNotes order", () => {
+  const at = (id: string, updatedAt: string, rank?: number) =>
+    textNote({ id, updatedAt, rank });
+  const ids = (notes: Note[]) => notes.map((note) => note.id);
+
+  it("lists never-dragged notes most recently edited first", () => {
+    const { others } = groupNotes([
+      at("old", "2026-10-01T08:00:00.000Z"),
+      at("new", "2026-10-01T09:00:00.000Z"),
+    ]);
+    expect(ids(others)).toEqual(["new", "old"]);
+  });
+
+  it("lists dragged notes by rank, whatever their age", () => {
+    const { others } = groupNotes([
+      at("a", "2026-10-01T09:00:00.000Z", 1),
+      at("b", "2026-10-01T08:00:00.000Z", 0),
+    ]);
+    expect(ids(others)).toEqual(["b", "a"]);
+  });
+
+  it("puts notes without a rank above the dragged ones", () => {
+    const { others } = groupNotes([
+      at("ranked", "2026-10-01T09:00:00.000Z", 0),
+      at("fresh", "2026-10-01T07:00:00.000Z"),
+    ]);
+    expect(ids(others)).toEqual(["fresh", "ranked"]);
+  });
+});

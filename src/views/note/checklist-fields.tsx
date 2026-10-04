@@ -1,19 +1,44 @@
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   CaretDown,
+  DotsSixVertical,
   Plus,
   TextIndent,
   TextOutdent,
   X,
 } from "@phosphor-icons/react";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Button } from "@maat-apps/ui/button";
-import { Checkbox } from "@maat-apps/ui/checkbox";
+import { Checkbox } from "../../components/checkbox";
 import { useTranslation } from "../../i18n/use-translation";
 import {
   canIndent,
   createItem,
   insertItemAfter,
+  moveItem,
   nextItemIndented,
   previousUncheckedId,
   removeItem,
@@ -37,6 +62,11 @@ function ItemRow({
   item,
   indented,
   indentAction,
+  focused,
+  rowRef,
+  rowStyle,
+  dragging = false,
+  dragHandle,
   inputRef,
   onFocusChange,
   onText,
@@ -51,6 +81,13 @@ function ItemRow({
   indented: boolean;
   /** The indent button to offer while the item has focus. */
   indentAction: IndentAction;
+  /** The item's input has focus: it alone offers its action buttons. */
+  focused: boolean;
+  rowRef?: (element: HTMLLIElement | null) => void;
+  rowStyle?: CSSProperties;
+  dragging?: boolean;
+  /** The grip that drags the row; unchecked items only. */
+  dragHandle?: ReactNode;
   inputRef: (element: HTMLInputElement | null) => void;
   onFocusChange: (focused: boolean) => void;
   onText: (text: string) => void;
@@ -81,52 +118,97 @@ function ItemRow({
   }
 
   return (
-    <li className={`flex items-center gap-3 ${indented ? "pl-8" : ""}`}>
-      <Checkbox
-        checked={item.checked}
-        aria-label={t("itemDone", { item: label })}
-        onCheckedChange={(checked) => onChecked(checked === true)}
-      />
-      <input
-        ref={inputRef}
-        value={item.text}
-        aria-label={t("listItem")}
-        placeholder={t("listItem")}
-        className={`placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent py-2 text-base outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
-        enterKeyHint="next"
-        onChange={(event) => onText(event.target.value)}
-        onKeyDown={handleKeyDown}
-        onFocus={() => onFocusChange(true)}
-        onBlur={() => onFocusChange(false)}
-      />
-      {indentAction && (
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t(
-            indentAction === "indent" ? "indentItem" : "outdentItem",
-            {
-              item: label,
-            },
-          )}
-          onMouseDown={keepFocus}
-          onPointerDown={keepFocus}
-          onClick={() => onIndent(indentAction === "indent")}
-        >
-          {indentAction === "indent" ? <TextIndent /> : <TextOutdent />}
-        </Button>
-      )}
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={t("removeItem", { item: label })}
-        onClick={onRemove}
+    <li
+      ref={rowRef}
+      style={rowStyle}
+      className={`bg-background flex items-center gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center">
+        {dragHandle}
+      </span>
+      <div
+        className={`flex min-w-0 flex-1 items-center gap-3 ${indented ? "pl-9" : ""}`}
       >
-        <X />
-      </Button>
+        <Checkbox
+          checked={item.checked}
+          aria-label={t("itemDone", { item: label })}
+          onCheckedChange={(checked) => onChecked(checked === true)}
+        />
+        <input
+          ref={inputRef}
+          value={item.text}
+          aria-label={t("listItem")}
+          placeholder={t("listItem")}
+          className={`placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
+          enterKeyHint="next"
+          onChange={(event) => onText(event.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => onFocusChange(true)}
+          onBlur={() => onFocusChange(false)}
+        />
+        {indentAction && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t(
+              indentAction === "indent" ? "indentItem" : "outdentItem",
+              { item: label },
+            )}
+            onMouseDown={keepFocus}
+            onPointerDown={keepFocus}
+            onClick={() => onIndent(indentAction === "indent")}
+          >
+            {indentAction === "indent" ? <TextIndent /> : <TextOutdent />}
+          </Button>
+        )}
+        {focused && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("removeItem", { item: label })}
+            onMouseDown={keepFocus}
+            onPointerDown={keepFocus}
+            onClick={onRemove}
+          >
+            <X className="size-6" />
+          </Button>
+        )}
+      </div>
     </li>
   );
 }
+
+/* eslint-disable react-hooks/refs -- useSortable returns ref callbacks and
+   event handlers, which the rule mistakes for ref values. */
+function SortableItemRow(props: Parameters<typeof ItemRow>[0]) {
+  const { t } = useTranslation();
+  const sortable = useSortable({ id: props.item.id });
+  const label = props.item.text || t("emptyItem");
+  return (
+    <ItemRow
+      {...props}
+      rowRef={sortable.setNodeRef}
+      rowStyle={{
+        transform: CSS.Translate.toString(sortable.transform),
+        transition: sortable.transition,
+      }}
+      dragging={sortable.isDragging}
+      dragHandle={
+        <button
+          type="button"
+          ref={sortable.setActivatorNodeRef}
+          className="text-foreground flex size-10 touch-none items-center justify-center rounded-full outline-none focus-visible:ring-3"
+          aria-label={t("dragItem", { item: label })}
+          {...sortable.attributes}
+          {...sortable.listeners}
+        >
+          <DotsSixVertical weight="bold" className="size-6" />
+        </button>
+      }
+    />
+  );
+}
+/* eslint-enable react-hooks/refs */
 
 /**
  * A checklist's items: unchecked first, checked ones below in a collapsible
@@ -186,13 +268,26 @@ export function ChecklistFields({
     return canIndent(note.items, item.id) ? "indent" : null;
   }
 
-  function renderItem(item: ChecklistItem) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (over)
+      setItems(moveItem(note.items, String(active.id), String(over.id)));
+  }
+
+  function renderRow(item: ChecklistItem, Row: typeof ItemRow) {
     return (
-      <ItemRow
+      <Row
         key={item.id}
         item={item}
         indented={indented.has(item.id)}
         indentAction={indentActionFor(item)}
+        focused={item.id === focusedId}
         onFocusChange={(focused) => {
           if (focused) setFocusedId(item.id);
           else
@@ -223,20 +318,39 @@ export function ChecklistFields({
     );
   }
 
+  function renderSortable(item: ChecklistItem) {
+    return renderRow(item, SortableItemRow);
+  }
+
+  function renderPlain(item: ChecklistItem) {
+    return renderRow(item, ItemRow);
+  }
+
   return (
     <div className="grid gap-2">
-      <ul
-        className="m-0 grid list-none gap-0.5 p-0"
-        aria-label={t("listItems")}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
       >
-        {unchecked.map(renderItem)}
-      </ul>
+        <SortableContext
+          items={unchecked.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <ul
+            className="m-0 grid list-none gap-0.5 p-0"
+            aria-label={t("listItems")}
+          >
+            {unchecked.map(renderSortable)}
+          </ul>
+        </SortableContext>
+      </DndContext>
       <Button
         variant="ghost"
-        className="text-muted-foreground justify-start px-1"
+        className="h-12 justify-start gap-3 pl-11 text-lg font-normal"
         onClick={() => addItemAfter(unchecked.at(-1)?.id ?? null)}
       >
-        <Plus aria-hidden="true" /> {t("addItem")}
+        <Plus aria-hidden="true" className="size-6" /> {t("addItem")}
       </Button>
       {checked.length > 0 && (
         <section className="grid gap-1 border-t pt-3">
@@ -257,7 +371,7 @@ export function ChecklistFields({
               className="m-0 grid list-none gap-0.5 p-0"
               aria-label={t("checkedItems")}
             >
-              {checked.map(renderItem)}
+              {checked.map(renderPlain)}
             </ul>
           )}
         </section>

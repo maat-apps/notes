@@ -109,3 +109,34 @@ test("Backspace on an empty nested item un-nests it first", async ({
   await page.keyboard.press("Backspace");
   await expect(items).toHaveCount(2);
 });
+
+test("an item is reordered by dragging its handle", async ({ page }) => {
+  await goHome(page);
+  await newChecklist(page);
+  await page.keyboard.type("Milk");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Bread");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Eggs");
+
+  const handle = page.getByRole("button", { name: "Reorder Milk" });
+  const target = await page
+    .getByRole("textbox", { name: "List item" })
+    .nth(2)
+    .boundingBox();
+  const grip = await handle.boundingBox();
+  if (!grip || !target) throw new Error("rows are not laid out");
+
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grip.x + 5, grip.y + 20, { steps: 5 });
+  await page.mouse.move(grip.x + 5, target.y + target.height, { steps: 10 });
+  await page.mouse.up();
+
+  const items = page
+    .getByRole("list", { name: "List items" })
+    .getByRole("textbox", { name: "List item" });
+  await expect(items.nth(0)).toHaveValue("Bread");
+  await expect(items.nth(1)).toHaveValue("Eggs");
+  await expect(items.nth(2)).toHaveValue("Milk");
+});

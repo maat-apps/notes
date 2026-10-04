@@ -121,7 +121,8 @@ export function saveNote(note: Note, now = new Date()): void {
     deleteNote(note.id);
     return;
   }
-  const saved = { ...note, updatedAt: now.toISOString() };
+  // Editing sends a note back to the top, as in Keep.
+  const saved = { ...note, updatedAt: now.toISOString(), rank: undefined };
   const current = getNotesSnapshot();
   const exists = current.some((item) => item.id === note.id);
   writeNotes(
@@ -142,6 +143,19 @@ export function setPinned(id: string, pinned: boolean): void {
   writeNotes(
     getNotesSnapshot().map((note) =>
       note.id === id ? { ...note, pinned } : note,
+    ),
+  );
+}
+
+/**
+ * Fixes the list order: each id gets its position as `rank`. Pass every
+ * note of the list in its new order, pinned section first.
+ */
+export function setNoteOrder(ids: string[]): void {
+  const ranks = new Map(ids.map((id, index) => [id, index]));
+  writeNotes(
+    getNotesSnapshot().map((note) =>
+      ranks.has(note.id) ? { ...note, rank: ranks.get(note.id) } : note,
     ),
   );
 }

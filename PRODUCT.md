@@ -15,8 +15,9 @@ web - PWA, mobile-only (like routines and trainer).
 
 Exactly two, each with an optional title:
 
-- **Text note** — a plain-text body. No formatting, no links preview, no
-  images.
+- **Text note** — a plain-text body. No formatting, no images. Links in the
+  body are tappable and open in the browser; there is no fetched preview
+  (it would need a server and leak the URLs).
 - **Checklist** — a list of items, each a line of text with a checkbox.
   Checked items drop below the unchecked ones into a collapsible
   "Checked items" section, as in Keep; unchecking moves an item back up.
@@ -24,27 +25,36 @@ Exactly two, each with an optional title:
   under the one above (or un-nested); checking a parent checks its
   children, unchecking a child unchecks its parent, and Backspace on an
   empty nested item un-nests it before removing it.
+  Each item has a drag handle on the left to reorder it (a parent moves
+  together with its children) and a delete button on the right. A
+  "+ List item" row ends the unchecked items, as in Keep; Enter on an
+  item also adds a new one below.
 
 A note with neither a title nor any content is discarded instead of saved.
 
 ## Behavior
 
-- **List.** One column of note cards, most recently edited first. A card
-  shows the title (if any) and a preview of the body or the first few
-  checklist items.
+- **List.** One column of note cards. A card shows the title (if any) and
+  a preview of the body or the first few checklist items. New and edited
+  notes go to the top; the order can then be changed manually.
+- **Reordering.** Long-press a card and drag it to move it, as in Keep.
+  The order is kept (a pinned note can only move within the pinned
+  section, an unpinned one within the rest).
 - **Pinning.** Pinned notes sit in their own "Pinned" section above the
   rest.
 - **Search.** Filters the list by title, text body and checklist items.
 - **Editing.** Opening a note edits it in place; changes save
   automatically, with no "Save" button.
 - **Deleting.** Permanent, after a confirmation — there is no archive and
-  no trash.
+  no trash, so there is no undo either. Applies to notes and, via its
+  delete button, to checklist items (items go without a confirmation —
+  they are one line each).
 - **Settings** (a drawer, as in routines): language (English/Polish), app
   lock, backup export/import, install and update.
 
 ## Out of scope, on purpose
 
-Text formatting, images, drawings, audio, labels/tags/hashtags, note
+Text formatting, link previews, images, drawings, audio, labels/tags/hashtags, note
 colors, reminders, archive, trash, sharing and sync.
 
 ## Design direction

@@ -66,3 +66,38 @@ export async function waitForStoredLock(page: Page) {
     )
     .toBe(true);
 }
+
+/**
+ * Resolves once every note in IndexedDB carries a `rank`, i.e. a dragged
+ * order has been written. Notes persist in the background, so a reload right
+ * after a drag can lose it.
+ */
+export async function waitForStoredOrder(page: Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<boolean>((resolve) => {
+            const request = indexedDB.open("notes");
+            request.onerror = () => resolve(false);
+            request.onsuccess = () => {
+              const read = request.result
+                .transaction("kv")
+                .objectStore("kv")
+                .get("notes-data");
+              read.onerror = () => resolve(false);
+              read.onsuccess = () => {
+                const notes =
+                  (read.result as { notes?: { rank?: number }[] } | undefined)
+                    ?.notes ?? [];
+                resolve(
+                  notes.length > 0 &&
+                    notes.every((note) => typeof note.rank === "number"),
+                );
+              };
+            };
+          }),
+      ),
+    )
+    .toBe(true);
+}
