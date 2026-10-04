@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { createTextNote, goHome } from "./utils";
+import { createTextNote, goHome, waitForStoredOrder } from "./utils";
 
 test("an empty list invites the first note", async ({ page }) => {
   await goHome(page);
@@ -35,6 +35,7 @@ test("a card is dragged into a new place and stays there", async ({ page }) => {
   await page.mouse.up();
 
   await expect(cards.nth(2)).toContainText("Third");
+  await waitForStoredOrder(page);
   await page.reload();
   await expect(cards.nth(2)).toContainText("Third");
 });
