@@ -189,7 +189,7 @@ function SortableItemRow(props: Parameters<typeof ItemRow>[0]) {
       {...props}
       rowRef={sortable.setNodeRef}
       rowStyle={{
-        transform: CSS.Transform.toString(sortable.transform),
+        transform: CSS.Translate.toString(sortable.transform),
         transition: sortable.transition,
       }}
       dragging={sortable.isDragging}

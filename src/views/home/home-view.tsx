@@ -9,8 +9,10 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Gear, MagnifyingGlass } from "@phosphor-icons/react";
 import { startTransition, useState } from "react";
 import { useNavigate } from "react-router";
@@ -19,7 +21,7 @@ import { Button } from "@maat-apps/ui/button";
 import { EmptyState } from "@maat-apps/ui/empty-state";
 import { Input } from "@maat-apps/ui/input";
 import { PageHeader } from "@maat-apps/ui/page-header";
-import { reorderIds, useSortableItem } from "@maat-apps/ui/sortable-list";
+import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
 import { searchNotes } from "../../lib/note-search";
@@ -31,7 +33,12 @@ import { SettingsDrawer } from "../settings/settings-drawer";
 import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 
-/** A card that a long press picks up — only the card's drag, not its tap. */
+/**
+ * A card that a long press picks up — only the card's drag, not its tap.
+ * It follows the finger with a plain translate: the sortable's own
+ * transform also scales the card to the size of the one it passes, which
+ * stretches a short card (and its text) over a tall one.
+ */
 function SortableNoteCard({
   note,
   onOpen,
@@ -39,11 +46,12 @@ function SortableNoteCard({
   note: Note;
   onOpen: () => void;
 }) {
-  const { setNodeRef, style, listeners, isDragging } = useSortableItem(note.id);
+  const { setNodeRef, transform, transition, listeners, isDragging } =
+    useSortable({ id: note.id });
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       className={`select-none [-webkit-touch-callout:none] ${isDragging ? "relative z-10 shadow-lg" : ""}`}
       {...listeners}
     >

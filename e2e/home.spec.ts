@@ -12,7 +12,8 @@ test("an empty list invites the first note", async ({ page }) => {
 test("a card is dragged into a new place and stays there", async ({ page }) => {
   await goHome(page);
   for (const title of ["First", "Second", "Third"]) {
-    await createTextNote(page, { title, body: title });
+    const body = title === "Third" ? `${title}\n\n\n\n\n` : title;
+    await createTextNote(page, { title, body });
   }
   const cards = page.getByRole("button", { name: /First|Second|Third/ });
   await expect(cards.nth(0)).toContainText("Third");
@@ -28,6 +29,9 @@ test("a card is dragged into a new place and stays there", async ({ page }) => {
   await page.mouse.move(grip.x + 40, target.y + target.height / 2, {
     steps: 12,
   });
+  const dragged = cards.nth(0).locator("xpath=..");
+  const transform = await dragged.evaluate((el) => el.style.transform);
+  expect(transform).not.toContain("scale");
   await page.mouse.up();
 
   await expect(cards.nth(2)).toContainText("Third");
