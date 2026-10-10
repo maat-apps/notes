@@ -18,13 +18,13 @@ function ChecklistPreview({
   const indented = shownIndented(note.items, shown);
   const hidden = unchecked.length - shown.length;
   return (
-    <ul className="m-0 grid list-none gap-2.5 p-0">
+    <ul className="m-0 grid list-none gap-1.5 p-0">
       {shown.map((item) => (
         <li
           key={item.id}
           className={`flex items-start gap-2 ${indented.has(item.id) ? "pl-6" : ""}`}
         >
-          <Square aria-hidden="true" className="mt-1 size-5 shrink-0" />
+          <Square aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           <span className="min-w-0 break-words">{item.text}</span>
         </li>
       ))}
@@ -35,7 +35,7 @@ function ChecklistPreview({
       )}
       {checked.length > 0 && (
         <li className="text-muted-foreground flex items-center gap-2">
-          <CheckSquare aria-hidden="true" className="size-5 shrink-0" />
+          <CheckSquare aria-hidden="true" className="size-4 shrink-0" />
           {t("checkedItemsCount", { count: checked.length })}
         </li>
       )}
@@ -46,10 +46,13 @@ function ChecklistPreview({
 /** One note in the list: its title (if any) and a preview of its content. */
 export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
   return (
-    <ListRow onClick={onOpen} className="items-start rounded-3xl px-5 py-6">
-      <div className="grid min-w-0 flex-1 gap-3 text-left text-lg">
+    <ListRow
+      onClick={onOpen}
+      className="border-border min-h-0 items-start rounded-lg border px-4 py-3"
+    >
+      <div className="grid min-w-0 flex-1 gap-2 text-left text-sm leading-5">
         {note.title && (
-          <h3 className="m-0 text-lg font-semibold break-words">
+          <h3 className="m-0 text-base leading-6 font-medium break-words">
             {note.title}
           </h3>
         )}
