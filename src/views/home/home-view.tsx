@@ -8,6 +8,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -108,6 +112,7 @@ function NoteSection({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
