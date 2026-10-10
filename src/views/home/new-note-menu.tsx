@@ -59,7 +59,7 @@ export function NewNoteMenu({
         <div
           role="menu"
           aria-label={t("newNote")}
-          className={`${FAB_POSITION} bottom-[calc(96px+env(safe-area-inset-bottom))] flex flex-col items-end gap-3`}
+          className={`${FAB_POSITION} bottom-[calc(128px+env(safe-area-inset-bottom))] flex flex-col items-end gap-3`}
         >
           <MenuItem onClick={() => onCreate("checklist")}>
             <CheckSquare aria-hidden="true" className="size-6" />
@@ -72,7 +72,7 @@ export function NewNoteMenu({
         </div>
       )}
       <FabButton
-        className={`${FAB_POSITION} bottom-[calc(20px+env(safe-area-inset-bottom))]`}
+        className={`${FAB_POSITION} bottom-[calc(20px+env(safe-area-inset-bottom))] h-22 w-22 rounded-3xl`}
         ariaLabel={open ? t("close") : t("newNote")}
         onClick={() => onOpenChange(!open)}
       >

@@ -8,7 +8,7 @@ import { Button } from "@maat-apps/ui/button";
 import { useTranslation } from "../../i18n/use-translation";
 import { formatEdited } from "../../lib/format-edited";
 
-/** The bar along the bottom of a note: undo, redo, when it was edited, more. */
+/** The bar along the bottom of a note: when it was edited, undo, redo, more. */
 export function NoteToolbar({
   updatedAt,
   canUndo,
@@ -34,6 +34,10 @@ export function NoteToolbar({
   return (
     <div className="bg-background fixed inset-x-0 bottom-0 z-20">
       <div className="mx-auto flex w-[min(100%,480px)] items-center gap-1 px-3 pt-2 pb-[calc(8px+env(safe-area-inset-bottom))]">
+        <p className="text-muted-foreground m-0 min-w-0 flex-1 truncate text-left text-xs">
+          {updatedAt &&
+            t("editedAt", { when: formatEdited(updatedAt, locale) })}
+        </p>
         <Button
           variant="ghost"
           size="icon-lg"
@@ -56,10 +60,6 @@ export function NoteToolbar({
         >
           <ArrowUUpRight className="size-6" />
         </Button>
-        <p className="text-muted-foreground m-0 min-w-0 flex-1 truncate text-center text-xs">
-          {updatedAt &&
-            t("editedAt", { when: formatEdited(updatedAt, locale) })}
-        </p>
         <Button
           variant="ghost"
           size="icon-lg"
