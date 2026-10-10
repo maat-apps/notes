@@ -1,4 +1,4 @@
-import { PushPin, PushPinSlash } from "@phosphor-icons/react";
+import { PushPinSimple } from "@phosphor-icons/react";
 import { startTransition, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -107,11 +107,10 @@ export function NoteEditor({
             aria-pressed={note.pinned}
             onClick={togglePin}
           >
-            {note.pinned ? (
-              <PushPinSlash className="size-6" />
-            ) : (
-              <PushPin className="size-6" />
-            )}
+            <PushPinSimple
+              weight={note.pinned ? "fill" : "regular"}
+              className="size-6"
+            />
           </Button>
         }
       />

@@ -22,12 +22,12 @@ function MenuAction({
 }) {
   return (
     <Button
-      variant="outline"
-      size="lg"
-      className="justify-start"
+      variant="ghost"
+      className="h-12 w-full justify-start gap-6 rounded-none px-6 text-base font-normal"
       onClick={onClick}
     >
-      {icon} {children}
+      {icon}
+      {children}
     </Button>
   );
 }
@@ -74,12 +74,12 @@ export function NoteMenu({
       showSwipeHandle
     >
       <DrawerContent>
-        <DrawerHeader className="group-data-[swipe-axis=y]/drawer-popup:text-left">
+        <DrawerHeader className="px-6 group-data-[swipe-axis=y]/drawer-popup:text-left">
           <DrawerTitle>{t("moreActions")}</DrawerTitle>
         </DrawerHeader>
-        <div className="grid gap-2.5 px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+        <div className="grid pb-[calc(16px+env(safe-area-inset-bottom))]">
           <MenuAction
-            icon={<Copy aria-hidden="true" />}
+            icon={<Copy aria-hidden="true" className="size-6" />}
             onClick={() => choose(onCopy)}
           >
             {t("makeCopy")}
@@ -87,9 +87,9 @@ export function NoteMenu({
           <MenuAction
             icon={
               type === "text" ? (
-                <CheckSquare aria-hidden="true" />
+                <CheckSquare aria-hidden="true" className="size-6" />
               ) : (
-                <TextAlignLeft aria-hidden="true" />
+                <TextAlignLeft aria-hidden="true" className="size-6" />
               )
             }
             onClick={() => choose(onConvert)}
@@ -97,7 +97,7 @@ export function NoteMenu({
             {type === "text" ? t("showCheckboxes") : t("hideCheckboxes")}
           </MenuAction>
           <MenuAction
-            icon={<Trash aria-hidden="true" />}
+            icon={<Trash aria-hidden="true" className="size-6" />}
             onClick={() => choose(onDelete)}
           >
             {t("deleteNote")}
