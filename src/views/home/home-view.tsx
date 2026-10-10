@@ -98,9 +98,9 @@ function NoteSection({
   );
 
   return (
-    <section className="grid gap-4" aria-label={title}>
+    <section className="grid gap-3" aria-label={title}>
       {title && (
-        <h2 className="text-muted-foreground m-0 px-4 text-base font-medium">
+        <h2 className="text-muted-foreground m-0 px-1 text-xs font-medium tracking-wider uppercase">
           {title}
         </h2>
       )}
@@ -142,7 +142,7 @@ export function HomeView() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-5 px-5 pt-27 pb-[calc(96px+env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-4 pt-27 pb-[calc(96px+env(safe-area-inset-bottom))]">
       <PageHeader>
         <h1 className="font-heading m-0 text-3xl leading-[1.05] font-bold tracking-tight">
           {t("appName")}
