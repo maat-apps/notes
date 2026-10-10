@@ -46,7 +46,10 @@ function ChecklistPreview({
 /** One note in the list: its title (if any) and a preview of its content. */
 export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
   return (
-    <ListRow onClick={onOpen} className="border-border min-h-0 items-start rounded-lg border px-4 py-3">
+    <ListRow
+      onClick={onOpen}
+      className="border-border min-h-0 items-start rounded-lg border px-4 py-3"
+    >
       <div className="grid min-w-0 flex-1 gap-2 text-left text-sm leading-5">
         {note.title && (
           <h3 className="m-0 text-base leading-6 font-medium break-words">
