@@ -61,9 +61,7 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   item belongs to the nearest top-level item above it (`parentId`,
   `childIds`), and `shownIndented` decides what's drawn nested in each
   rendered list.
-  Search (`lib/note-search.ts`) matches every word in titles, text and
-  checklist items, ignoring case and diacritics. Back uses
-  `useSmartBack("/")`. Settings is a drawer
+  Back uses `useSmartBack("/")`. Settings is a drawer
   (`views/settings/`), one `settings-<name>-section.tsx` per card.
 - **i18n.** `src/i18n/en.json` and `pl.json` (core's `createTranslation`;
   the device language picks on first launch, Settings → Language after).
