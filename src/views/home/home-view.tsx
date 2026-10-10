@@ -148,7 +148,7 @@ export function HomeView() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-4 pt-27 pb-[calc(128px+env(safe-area-inset-bottom))]">
-      <PageHeader>
+      <PageHeader className="shadow-none">
         <h1 className="font-heading m-0 text-3xl leading-[1.05] font-bold tracking-tight">
           {t("appName")}
         </h1>
