@@ -48,7 +48,7 @@ export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
   return (
     <ListRow
       onClick={onOpen}
-      className="border-border min-h-0 items-start rounded-lg border px-4 py-3"
+      className="min-h-0 items-start px-4 py-3"
     >
       <div className="grid min-w-0 flex-1 gap-2 text-left text-sm leading-5">
         {note.title && (

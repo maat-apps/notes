@@ -94,9 +94,8 @@ export function NoteEditor({
   }
 
   return (
-    <div className="mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(88px+env(safe-area-inset-bottom))] [&>header]:shadow-none">
+    <div className="mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(88px+env(safe-area-inset-bottom))]">
       <AppBar
-        title={note.type === "text" ? t("textNote") : t("checklist")}
         backLabel={t("back")}
         onBack={() => startTransition(back)}
         action={
