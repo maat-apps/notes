@@ -23,11 +23,7 @@ import { useNavigate } from "react-router";
 
 import { Button } from "@maat-apps/ui/button";
 import { EmptyState } from "@maat-apps/ui/empty-state";
-import {
-  PageHeader,
-  PageTitle,
-  SectionTitle,
-} from "@maat-apps/ui/page-header";
+import { PageHeader, PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
 import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
@@ -107,9 +103,7 @@ function NoteSection({
 
   return (
     <section className="grid gap-3" aria-label={title}>
-      {title && (
-        <SectionTitle>{title}</SectionTitle>
-      )}
+      {title && <SectionTitle>{title}</SectionTitle>}
       {onReorder ? (
         <DndContext
           sensors={sensors}
