@@ -72,7 +72,7 @@ export function NewNoteMenu({
         </div>
       )}
       <FabButton
-        className={`${FAB_POSITION} bottom-[calc(20px+env(safe-area-inset-bottom))] h-22 w-22 rounded-3xl`}
+        className={`${FAB_POSITION} bottom-[calc(20px+env(safe-area-inset-bottom))]`}
         ariaLabel={open ? t("close") : t("newNote")}
         onClick={() => onOpenChange(!open)}
       >
