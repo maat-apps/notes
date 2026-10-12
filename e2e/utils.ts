@@ -1,7 +1,7 @@
 // Reusable Playwright test helpers — plain functions specs call directly,
 // not test.extend() fixtures (hence "utils.ts", not "fixtures.ts" — see
 // maat-core/STRUCTURE.md's Testing section for why that naming matters).
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function goHome(page: Page) {
   await page.goto("");
@@ -24,6 +24,25 @@ export async function createTextNote(
   if (title) await page.getByRole("textbox", { name: "Title" }).fill(title);
   if (body) await page.getByRole("textbox", { name: "Note" }).fill(body);
   await page.getByRole("button", { name: "Back" }).click();
+}
+
+/**
+ * Presses a note card and holds it until it lifts, as a long press does,
+ * and returns where it was; the mouse is still down afterwards.
+ */
+export async function pressAndHold(page: Page, card: Locator) {
+  const box = await card.boundingBox();
+  if (!box) throw new Error("the card is not laid out");
+  await page.mouse.move(box.x + 40, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(card.locator("xpath=..")).toHaveClass(/shadow-lg/);
+  return box;
+}
+
+/** A long press that lets go without moving — it selects the card. */
+export async function longPress(page: Page, card: Locator) {
+  await pressAndHold(page, card);
+  await page.mouse.up();
 }
 
 /** Deletes the note that is open, through the menu and its confirmation. */

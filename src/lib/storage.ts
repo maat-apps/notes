@@ -133,16 +133,27 @@ export function saveNote(note: Note, now = new Date()): void {
 }
 
 export function deleteNote(id: string): void {
+  deleteNotes([id]);
+}
+
+/** Deletes every note in `ids` at once; unknown ids are ignored. */
+export function deleteNotes(ids: string[]): void {
+  const doomed = new Set(ids);
   const current = getNotesSnapshot();
-  if (!current.some((note) => note.id === id)) return;
-  writeNotes(current.filter((note) => note.id !== id));
+  if (!current.some((note) => doomed.has(note.id))) return;
+  writeNotes(current.filter((note) => !doomed.has(note.id)));
+}
+
+export function setPinned(id: string, pinned: boolean): void {
+  setPinnedNotes([id], pinned);
 }
 
 /** Pinning isn't an edit, so it leaves `updatedAt` (the list order) alone. */
-export function setPinned(id: string, pinned: boolean): void {
+export function setPinnedNotes(ids: string[], pinned: boolean): void {
+  const targets = new Set(ids);
   writeNotes(
     getNotesSnapshot().map((note) =>
-      note.id === id ? { ...note, pinned } : note,
+      targets.has(note.id) ? { ...note, pinned } : note,
     ),
   );
 }

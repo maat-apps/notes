@@ -44,6 +44,13 @@ A note with neither a title nor any content is discarded instead of saved.
   section, an unpinned one within the rest).
 - **Pinning.** Pinned notes sit in their own "Pinned" section above the
   rest.
+- **Selecting.** A long press on a card that lets go without moving it
+  selects the card (moving it drags it instead); while anything is
+  selected, a tap selects or deselects a card rather than opening it.
+  Selected cards get a bold white outline, and a bar along the bottom
+  takes the place of the "+" button: how many are selected, clear the
+  selection, pin (unpin, when every selected note already is) and delete
+  (after a confirmation).
 - **Editing.** Opening a note edits it in place; changes save
   automatically, with no "Save" button. A bar along the bottom has undo and
   redo (a quick burst of typing is one step; they last for the editing
