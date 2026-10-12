@@ -51,7 +51,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   (`note-utils.ts`'s `isEmptyNote`). Backups and the pre-update snapshot
   share one format (`backup.ts`, `app-update.ts`).
 - **Screens.** `src/app/router.tsx`: `/` (`views/home`: the list, pinned
-  section, FAB → `new-note-drawer.tsx`, settings drawer), `/new/:type` and
+  section, FAB → `new-note-menu.tsx`, settings drawer; a long press let go
+  without moving — the drag sensor's `onDragEnd` with no delta — selects
+  cards, and `selection-bar.tsx` replaces the FAB while any are), `/new/:type` and
   `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
   saves on every change (no Save button); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so

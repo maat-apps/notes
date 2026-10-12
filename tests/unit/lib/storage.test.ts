@@ -121,6 +121,45 @@ describe("deleteNote / setPinned", () => {
   });
 });
 
+describe("deleteNotes / setPinnedNotes", () => {
+  it("deletes several notes in one write", async () => {
+    const storage = await freshStorage();
+    for (const id of ["a", "b", "c"]) storage.saveNote(note({ id }), NOW);
+    const listener = vi.fn();
+    storage.subscribe(listener);
+
+    storage.deleteNotes(["a", "c", "missing"]);
+
+    expect(storage.getNotesSnapshot()).toEqual([note({ id: "b" })]);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("does nothing when none of the ids exist", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note(), NOW);
+    const listener = vi.fn();
+    storage.subscribe(listener);
+
+    storage.deleteNotes(["missing"]);
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("pins and unpins several notes, leaving the rest", async () => {
+    const storage = await freshStorage();
+    for (const id of ["a", "b", "c"]) storage.saveNote(note({ id }), NOW);
+
+    storage.setPinnedNotes(["a", "b"], true);
+    storage.setPinnedNotes(["b"], false);
+
+    expect(storage.getNotesSnapshot()).toEqual([
+      note({ id: "a", pinned: true }),
+      note({ id: "b" }),
+      note({ id: "c" }),
+    ]);
+  });
+});
+
 describe("loading", () => {
   it("drops malformed stored notes", async () => {
     vi.resetModules();
