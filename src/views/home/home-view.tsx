@@ -189,7 +189,7 @@ export function HomeView() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-27 pb-[calc(128px+env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-28 pb-[calc(128px+env(safe-area-inset-bottom))]">
       <PageHeader>
         <PageTitle>{t("appName")}</PageTitle>
         <Button
