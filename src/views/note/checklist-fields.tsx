@@ -142,7 +142,7 @@ function ItemRow({
           value={item.text}
           aria-label={t("listItem")}
           placeholder={t("listItem")}
-          className={`placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
+          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
           enterKeyHint="next"
           onChange={(event) => onText(event.target.value)}
           onKeyDown={handleKeyDown}

@@ -152,3 +152,26 @@ test("an item with a link gets a button that opens it", async ({ page }) => {
   await expect(open).toHaveAttribute("href", "https://shop.example/milk");
   await expect(page.getByRole("link")).toHaveCount(1);
 });
+
+test.describe("on a narrow phone", () => {
+  test.use({ viewport: { width: 360, height: 780 } });
+
+  test("adding items never widens the page", async ({ page }) => {
+    await goHome(page);
+    await newChecklist(page);
+    for (const item of ["Dishwasher", "Laundry", "Groceries"]) {
+      await page.keyboard.type(item);
+      await page.keyboard.press("Enter");
+    }
+
+    await expect(page.getByRole("textbox", { name: "List item" })).toHaveCount(
+      4,
+    );
+    const overflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+  });
+});
