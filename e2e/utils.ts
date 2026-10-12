@@ -43,6 +43,9 @@ export async function pressAndHold(page: Page, card: Locator) {
 export async function longPress(page: Page, card: Locator) {
   await pressAndHold(page, card);
   await page.mouse.up();
+  // dnd-kit keeps swallowing clicks for 50ms after a drag ends, with nothing
+  // on the page to wait for — a tap straight after would be lost.
+  await page.waitForTimeout(100);
 }
 
 /** Deletes the note that is open, through the menu and its confirmation. */
