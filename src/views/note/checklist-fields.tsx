@@ -196,19 +196,19 @@ function ItemRow({
             <ArrowSquareOut aria-hidden="true" className="size-5" />
           </a>
         )}
-        {focused && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mt-1"
-            aria-label={t("removeItem", { item: label })}
-            onMouseDown={keepFocus}
-            onPointerDown={keepFocus}
-            onClick={onRemove}
-          >
-            <X className="size-6" />
-          </Button>
-        )}
+        {/* Always laid out, only hidden while unfocused, so focusing an
+            item doesn't narrow its text and rewrap it. */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`mt-1 ${focused ? "" : "invisible"}`}
+          aria-label={t("removeItem", { item: label })}
+          onMouseDown={keepFocus}
+          onPointerDown={keepFocus}
+          onClick={onRemove}
+        >
+          <X className="size-6" />
+        </Button>
       </div>
     </li>
   );
