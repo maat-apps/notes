@@ -65,6 +65,30 @@ export async function newChecklist(page: Page) {
 }
 
 /**
+ * Drags a checklist item by its handle, `x` px sideways (right nests, left
+ * un-nests) and `y` px down.
+ */
+export async function dragItemHandle(
+  page: Page,
+  item: string,
+  { x = 0, y = 0 }: { x?: number; y?: number },
+) {
+  const handle = await page
+    .getByRole("button", { name: `Reorder ${item}` })
+    .boundingBox();
+  if (!handle) throw new Error("the row is not laid out");
+  const startX = handle.x + handle.width / 2;
+  const startY = handle.y + handle.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + Math.sign(x) * 5, startY, { steps: 2 });
+  await page.mouse.move(startX + x, startY + y, { steps: 10 });
+  await page.mouse.up();
+  // dnd-kit keeps swallowing clicks for 50ms after a drag ends.
+  await page.waitForTimeout(100);
+}
+
+/**
  * Resolves once the app-lock enrolment has reached IndexedDB. Settings
  * persist in the background, so a reload right after enrolling can lose
  * it and the app comes back unlocked.

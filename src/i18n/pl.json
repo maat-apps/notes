@@ -57,8 +57,6 @@
   "links": "Linki",
   "openLink": "Otwórz {link}",
   "dragItem": "Zmień kolejność: {item}",
-  "indentItem": "Zagnieźdź: {item}",
-  "outdentItem": "Wyciągnij poziom wyżej: {item}",
   "addItem": "Pozycja listy",
   "pin": "Przypnij",
   "unpin": "Odepnij",

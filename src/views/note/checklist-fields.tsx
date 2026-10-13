@@ -3,6 +3,7 @@ import {
   DndContext,
   type DragEndEvent,
   KeyboardSensor,
+  type Modifier,
   PointerSensor,
   useSensor,
   useSensors,
@@ -19,8 +20,6 @@ import {
   CaretDown,
   DotsSixVertical,
   Plus,
-  TextIndent,
-  TextOutdent,
   X,
 } from "@phosphor-icons/react";
 import {
@@ -28,6 +27,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -52,9 +52,26 @@ import {
 import { findLinks, linkLabel } from "../../lib/links";
 import type { ChecklistItem, ChecklistNote } from "../../lib/schemas";
 
-type IndentAction = "indent" | "outdent" | null;
+/** How far a row is drawn in when nested — `pl-9`. */
+const INDENT_WIDTH = 36;
 
-// Keeps the item's input focused when its indent button is tapped, so the
+// A row dragged sideways shows where it would land, but no further than one
+// nesting step either way.
+const limitSidewaysDrag: Modifier = ({ transform }) => ({
+  ...transform,
+  x: Math.max(-INDENT_WIDTH, Math.min(INDENT_WIDTH, transform.x)),
+});
+
+/**
+ * The nesting a sideways drag asks for: right nests, left un-nests, and a
+ * mostly vertical drag (just a reorder) leaves it be.
+ */
+function nestingFromDrag(offsetX: number): boolean | null {
+  if (Math.abs(offsetX) < INDENT_WIDTH / 2) return null;
+  return offsetX > 0;
+}
+
+// Keeps the item's input focused when its remove button is tapped, so the
 // button (shown only for the focused item) doesn't vanish mid-tap.
 function keepFocus(event: { preventDefault: () => void }) {
   event.preventDefault();
@@ -63,7 +80,7 @@ function keepFocus(event: { preventDefault: () => void }) {
 function ItemRow({
   item,
   indented,
-  indentAction,
+  canNest,
   focused,
   rowRef,
   rowStyle,
@@ -81,8 +98,8 @@ function ItemRow({
   item: ChecklistItem;
   /** Drawn nested under its parent. */
   indented: boolean;
-  /** The indent button to offer while the item has focus. */
-  indentAction: IndentAction;
+  /** Tab may nest it under the item above. */
+  canNest: boolean;
   /** The item's input has focus: it alone offers its action buttons. */
   focused: boolean;
   rowRef?: (element: HTMLLIElement | null) => void;
@@ -90,7 +107,7 @@ function ItemRow({
   dragging?: boolean;
   /** The grip that drags the row; unchecked items only. */
   dragHandle?: ReactNode;
-  inputRef: (element: HTMLInputElement | null) => void;
+  inputRef: (element: HTMLTextAreaElement | null) => void;
   onFocusChange: (focused: boolean) => void;
   onText: (text: string) => void;
   onChecked: (checked: boolean) => void;
@@ -102,18 +119,27 @@ function ItemRow({
   const { t } = useTranslation();
   const label = item.text || t("emptyItem");
   const link = findLinks(item.text)[0];
+  const textArea = useRef<HTMLTextAreaElement | null>(null);
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  // Long text wraps onto more lines of the same item: the field grows to fit.
+  useLayoutEffect(() => {
+    const element = textArea.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [item.text, indented]);
+
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter") {
       event.preventDefault();
       onEnter();
     } else if (event.key === "Backspace" && item.text === "") {
       event.preventDefault();
       onBackspaceEmpty();
-    } else if (event.key === "Tab" && indentAction !== null) {
+    } else if (event.key === "Tab" && !item.checked) {
       // A hardware keyboard nests with Tab, un-nests with Shift+Tab.
       const indent = !event.shiftKey;
-      if (indent === (indentAction === "indent")) {
+      if (indent ? canNest && !item.indented : item.indented) {
         event.preventDefault();
         onIndent(indent);
       }
@@ -124,27 +150,37 @@ function ItemRow({
     <li
       ref={rowRef}
       style={rowStyle}
-      className={`bg-background flex items-center gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
+      aria-level={indented ? 2 : 1}
+      className={`bg-background flex items-start gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center">
+      <span className="flex h-12 w-10 shrink-0 items-center justify-center">
         {dragHandle}
       </span>
       <div
-        className={`flex min-w-0 flex-1 items-center gap-3 ${indented ? "pl-9" : ""}`}
+        className={`flex min-w-0 flex-1 items-start gap-3 ${indented ? "pl-9" : ""}`}
       >
         <Checkbox
+          className="mt-3"
           checked={item.checked}
           aria-label={t("itemDone", { item: label })}
           onCheckedChange={(checked) => onChecked(checked === true)}
         />
-        <input
-          ref={inputRef}
+        <textarea
+          ref={(element) => {
+            textArea.current = element;
+            inputRef(element);
+          }}
+          rows={1}
           value={item.text}
           aria-label={t("listItem")}
           placeholder={t("listItem")}
-          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
+          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-lg wrap-break-word outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
           enterKeyHint="next"
-          onChange={(event) => onText(event.target.value)}
+          // An item is one line of text however it wraps: pasted line
+          // breaks become spaces.
+          onChange={(event) =>
+            onText(event.target.value.replace(/[\r\n]+/g, " "))
+          }
           onKeyDown={handleKeyDown}
           onFocus={() => onFocusChange(true)}
           onBlur={() => onFocusChange(false)}
@@ -155,30 +191,16 @@ function ItemRow({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("openLink", { link: linkLabel(link) })}
-            className="hover:bg-muted active:bg-muted flex size-10 shrink-0 items-center justify-center rounded-full"
+            className="hover:bg-muted active:bg-muted mt-1 flex size-10 shrink-0 items-center justify-center rounded-full"
           >
             <ArrowSquareOut aria-hidden="true" className="size-5" />
           </a>
-        )}
-        {indentAction && (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t(
-              indentAction === "indent" ? "indentItem" : "outdentItem",
-              { item: label },
-            )}
-            onMouseDown={keepFocus}
-            onPointerDown={keepFocus}
-            onClick={() => onIndent(indentAction === "indent")}
-          >
-            {indentAction === "indent" ? <TextIndent /> : <TextOutdent />}
-          </Button>
         )}
         {focused && (
           <Button
             variant="ghost"
             size="icon"
+            className="mt-1"
             aria-label={t("removeItem", { item: label })}
             onMouseDown={keepFocus}
             onPointerDown={keepFocus}
@@ -227,8 +249,8 @@ function SortableItemRow(props: Parameters<typeof ItemRow>[0]) {
 /**
  * A checklist's items: unchecked first, checked ones below in a collapsible
  * section (PRODUCT.md). Enter adds the next item; Backspace on an empty
- * item un-nests it, then removes it. The focused item offers a button to
- * nest it under the item above (one level) or un-nest it.
+ * item un-nests it, then removes it. Dragging an item's handle right nests
+ * it under the item above (one level), dragging it left un-nests it.
  */
 export function ChecklistFields({
   note,
@@ -240,7 +262,7 @@ export function ChecklistFields({
   onChange: (note: ChecklistNote) => void;
 }) {
   const { t } = useTranslation();
-  const inputs = useRef(new Map<string, HTMLInputElement>());
+  const inputs = useRef(new Map<string, HTMLTextAreaElement>());
   // The item to focus once it has rendered — a new checklist's first item.
   const pendingFocus = useRef<string | null>(
     autoFocus ? (note.items[0]?.id ?? null) : null,
@@ -276,12 +298,6 @@ export function ChecklistFields({
     setItems(insertItemAfter(note.items, afterId, item));
   }
 
-  function indentActionFor(item: ChecklistItem): IndentAction {
-    if (item.id !== focusedId || item.checked) return null;
-    if (item.indented) return "outdent";
-    return canIndent(note.items, item.id) ? "indent" : null;
-  }
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -289,9 +305,11 @@ export function ChecklistFields({
     }),
   );
 
-  function handleDragEnd({ active, over }: DragEndEvent) {
-    if (over)
-      setItems(moveItem(note.items, String(active.id), String(over.id)));
+  function handleDragEnd({ active, over, delta }: DragEndEvent) {
+    const id = String(active.id);
+    const moved = over ? moveItem(note.items, id, String(over.id)) : note.items;
+    const nested = nestingFromDrag(delta.x);
+    setItems(nested === null ? moved : setIndented(moved, id, nested));
   }
 
   function renderRow(item: ChecklistItem, Row: typeof ItemRow) {
@@ -300,7 +318,7 @@ export function ChecklistFields({
         key={item.id}
         item={item}
         indented={indented.has(item.id)}
-        indentAction={indentActionFor(item)}
+        canNest={canIndent(note.items, item.id)}
         focused={item.id === focusedId}
         onFocusChange={(focused) => {
           if (focused) setFocusedId(item.id);
@@ -345,6 +363,7 @@ export function ChecklistFields({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        modifiers={[limitSidewaysDrag]}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
