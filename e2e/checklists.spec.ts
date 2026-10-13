@@ -144,6 +144,24 @@ test("a long item wraps onto more lines of the same item", async ({ page }) => {
   expect(overflow).toBe(0);
 });
 
+test("focusing an item doesn't rewrap its text", async ({ page }) => {
+  await goHome(page);
+  await newChecklist(page);
+  await page.keyboard.type(
+    "Remember to buy oat milk, sourdough bread, free-range eggs and coffee",
+  );
+  await page.keyboard.press("Enter");
+
+  const item = page.getByRole("textbox", { name: "List item" }).first();
+  const remove = page.getByRole("button", { name: /^Remove Remember/ });
+  await expect(remove).toHaveCount(0);
+  const unfocused = await item.boundingBox();
+
+  await item.click();
+  await expect(remove).toBeVisible();
+  expect(await item.boundingBox()).toEqual(unfocused);
+});
+
 test("an item is reordered by dragging its handle", async ({ page }) => {
   await goHome(page);
   await newChecklist(page);
