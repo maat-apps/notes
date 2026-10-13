@@ -19,11 +19,12 @@ Exactly two, each with an optional title:
   links in the body are listed below it as tappable chips that open in the
   browser (a textarea can't hold a tappable link); there is no fetched
   preview (it would need a server and leak the URLs).
-- **Checklist** — a list of items, each a line of text with a checkbox.
+- **Checklist** — a list of items, each a line of text with a checkbox
+  (long text wraps onto more lines of the same item).
   Checked items drop below the unchecked ones into a collapsible
   "Checked items" section, as in Keep; unchecking moves an item back up.
-  Items nest one level deep, as in Keep: the focused item can be nested
-  under the one above (or un-nested); checking a parent checks its
+  Items nest one level deep, as in Keep: dragging an item's handle to the
+  right nests it under the one above, to the left un-nests it; checking a parent checks its
   children, unchecking a child unchecks its parent, and Backspace on an
   empty nested item un-nests it before removing it.
   Each item has a drag handle on the left to reorder it (a parent moves

@@ -57,8 +57,6 @@
   "links": "Links",
   "openLink": "Open {link}",
   "dragItem": "Reorder {item}",
-  "indentItem": "Nest {item}",
-  "outdentItem": "Unnest {item}",
   "addItem": "List item",
   "pin": "Pin",
   "unpin": "Unpin",
