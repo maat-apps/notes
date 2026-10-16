@@ -74,7 +74,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   `@maat-apps/ui/app-lock-gate`, wrapped around the router in
   `src/app/router.tsx`). `src/lib/app-lock.ts` rewrites the notes with the
   current key and erases them plus the update snapshot; `storage.ts` and
-  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. **Never change
+  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. The lock comes back after
+  time in the background per `app-settings.ts`'s `relockAfter` (Settings →
+  Security; `relockAfterMs` feeds `createAppLock`). **Never change
   `HKDF_INFO` (`"notes-data-v1"`)** — existing encrypted notes would
   become unreadable.
 - Full pattern log: none yet — run `/learn-patterns` after a non-trivial
