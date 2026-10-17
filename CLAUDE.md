@@ -53,11 +53,13 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   pre-update snapshot are core's `createLocalBackup` (`backup.ts`,
   re-exported by `app-update.ts`); `app-lock.ts` wires both through
   `lockData`.
-- **Screens.** `src/app/router.tsx`: `/` (`views/home`: the list, pinned
-  section, FAB → `new-note-menu.tsx`, settings drawer; a long press let go
-  without moving — the drag sensor's `onDragEnd` with no delta — selects
-  cards, and `selection-bar.tsx` replaces the FAB while any are), `/new/:type` and
-  `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
+- **Screens.** Keep-style layout, one column. `src/app/router.tsx`: `/`
+  (`views/home`: a title that scrolls away, the list — outlined cards, a
+  pinned section — and `@maat-apps/ui`'s `BottomBar`: settings, new
+  checklist, new note; a long press let go without moving — the drag
+  sensor's `onDragEnd` with no delta — selects cards, and
+  `selection-bar.tsx`, also a `BottomBar`, replaces it while any are),
+  `/new/:type` and `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
   saves on every change (no Save button); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so
   emptying it mid-edit (which deletes it) doesn't unmount the editor.
@@ -66,6 +68,13 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   item belongs to the nearest top-level item above it (`parentId`,
   `childIds`), and `shownIndented` decides what's drawn nested in each
   rendered list.
+  Motion (`lib/view-transition.ts`, View Transitions API; nothing under
+  `prefers-reduced-motion` or without the API, CSS in `globals.css`): a card
+  grows into its note (card and editor share `noteTransitionName`; the
+  navigation waits for `[data-note-editor]`), checked items slide to
+  "Checked items" (`itemTransitionName`), the list closes up after a
+  delete. Opening a note therefore changes the URL a frame after the tap —
+  e2e waits for the editor, not the click.
   Back uses `useSmartBack("/")`. Settings is a drawer
   (`views/settings/`), one `settings-<name>-section.tsx` per card.
 - **i18n.** `src/i18n/en.json` and `pl.json` (core's `createTranslation`;

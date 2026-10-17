@@ -32,6 +32,8 @@ import {
   useState,
 } from "react";
 
+import { flushSync } from "react-dom";
+
 import { Button } from "@maat-apps/ui/button";
 import { Checkbox } from "../../components/checkbox";
 import { useTranslation } from "../../i18n/use-translation";
@@ -51,6 +53,10 @@ import {
 } from "../../lib/checklist-utils";
 import { findLinks, linkLabel } from "../../lib/links";
 import type { ChecklistItem, ChecklistNote } from "../../lib/schemas";
+import {
+  itemTransitionName,
+  withViewTransition,
+} from "../../lib/view-transition";
 
 /** How far a row is drawn in when nested — `pl-9`. */
 const INDENT_WIDTH = 36;
@@ -84,6 +90,7 @@ function ItemRow({
   focused,
   rowRef,
   rowStyle,
+  transitionName,
   dragging = false,
   dragHandle,
   inputRef,
@@ -104,6 +111,13 @@ function ItemRow({
   focused: boolean;
   rowRef?: (element: HTMLLIElement | null) => void;
   rowStyle?: CSSProperties;
+  /**
+   * Set only while checking animates, so the item slides to "Checked
+   * items" (or back) as one view transition. A name at all times makes each
+   * row its own layer, which WebKit's drag (nesting by the handle) trips
+   * over.
+   */
+  transitionName?: string;
   dragging?: boolean;
   /** The grip that drags the row; unchecked items only. */
   dragHandle?: ReactNode;
@@ -149,7 +163,7 @@ function ItemRow({
   return (
     <li
       ref={rowRef}
-      style={rowStyle}
+      style={{ ...rowStyle, viewTransitionName: transitionName }}
       aria-level={indented ? 2 : 1}
       className={`bg-background flex items-start gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
     >
@@ -174,7 +188,7 @@ function ItemRow({
           value={item.text}
           aria-label={t("listItem")}
           placeholder={t("listItem")}
-          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-lg wrap-break-word outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
+          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-3 text-base wrap-break-word outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
           enterKeyHint="next"
           // An item is one line of text however it wraps: pasted line
           // breaks become spaces.
@@ -268,6 +282,7 @@ export function ChecklistFields({
     autoFocus ? (note.items[0]?.id ?? null) : null,
   );
   const [checkedOpen, setCheckedOpen] = useState(true);
+  const [animating, setAnimating] = useState(false);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const { unchecked, checked } = splitItems(note.items);
   const indented = new Set([
@@ -320,6 +335,7 @@ export function ChecklistFields({
         indented={indented.has(item.id)}
         canNest={canIndent(note.items, item.id)}
         focused={item.id === focusedId}
+        transitionName={animating ? itemTransitionName(item.id) : undefined}
         onFocusChange={(focused) => {
           if (focused) setFocusedId(item.id);
           else
@@ -333,9 +349,14 @@ export function ChecklistFields({
           else inputs.current.delete(item.id);
         }}
         onText={(text) => setItems(updateItem(note.items, item.id, { text }))}
-        onChecked={(isChecked) =>
-          setItems(setChecked(note.items, item.id, isChecked))
-        }
+        onChecked={(isChecked) => {
+          flushSync(() => setAnimating(true));
+          void withViewTransition(() =>
+            flushSync(() =>
+              setItems(setChecked(note.items, item.id, isChecked)),
+            ),
+          ).finally(() => setAnimating(false));
+        }}
         onEnter={() => addItemAfter(item.id)}
         onBackspaceEmpty={() => {
           if (item.indented) {
@@ -380,7 +401,7 @@ export function ChecklistFields({
       </DndContext>
       <Button
         variant="ghost"
-        className="h-12 justify-start gap-3 pl-11 text-lg font-normal"
+        className="h-12 justify-start gap-3 pl-11 text-base font-normal"
         onClick={() => addItemAfter(unchecked.at(-1)?.id ?? null)}
       >
         <Plus aria-hidden="true" className="size-6" /> {t("addItem")}
@@ -389,7 +410,7 @@ export function ChecklistFields({
         <section className="grid gap-1 border-t pt-3">
           <Button
             variant="ghost"
-            className="text-muted-foreground justify-start px-1"
+            className="text-muted-foreground aria-expanded:text-muted-foreground justify-start px-1 aria-expanded:bg-transparent"
             aria-expanded={checkedOpen}
             onClick={() => setCheckedOpen((open) => !open)}
           >
