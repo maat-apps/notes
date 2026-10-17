@@ -174,7 +174,7 @@ function ItemRow({
         className={`flex min-w-0 flex-1 items-start gap-3 ${indented ? "pl-9" : ""}`}
       >
         <Checkbox
-          className="mt-3"
+          className="mt-[15px]"
           checked={item.checked}
           aria-label={t("itemDone", { item: label })}
           onCheckedChange={(checked) => onChecked(checked === true)}
@@ -407,19 +407,23 @@ export function ChecklistFields({
         <Plus aria-hidden="true" className="size-6" /> {t("addItem")}
       </Button>
       {checked.length > 0 && (
-        <section className="grid gap-1 border-t pt-3">
-          <Button
-            variant="ghost"
-            className="text-muted-foreground aria-expanded:text-muted-foreground justify-start px-1 aria-expanded:bg-transparent"
+        <section className="grid gap-1 pt-2">
+          {/* Plain text with a chevron, as in Keep: no fill when tapped,
+              hovered or open. */}
+          <button
+            type="button"
+            className="flex h-12 items-center gap-1 rounded-lg text-left text-base outline-none focus-visible:ring-3"
             aria-expanded={checkedOpen}
             onClick={() => setCheckedOpen((open) => !open)}
           >
-            <CaretDown
-              aria-hidden="true"
-              className={checkedOpen ? "" : "-rotate-90"}
-            />
+            <span className="flex w-10 shrink-0 items-center justify-center">
+              <CaretDown
+                aria-hidden="true"
+                className={`size-6 transition-transform motion-reduce:transition-none ${checkedOpen ? "" : "-rotate-90"}`}
+              />
+            </span>
             {t("checkedItemsCount", { count: checked.length })}
-          </Button>
+          </button>
           {checkedOpen && (
             <ul
               className="m-0 grid list-none gap-0.5 p-0"

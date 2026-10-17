@@ -96,3 +96,24 @@ test("a note without a link shows no link list", async ({ page }) => {
 
   await expect(page.getByRole("list", { name: "Links" })).toHaveCount(0);
 });
+
+test("a long note opens at its top, whatever the list's scroll", async ({
+  page,
+}) => {
+  await goHome(page);
+  const long = Array.from({ length: 40 }, (_, i) => `Line ${i + 1}`).join("\n");
+  for (const title of ["Long", "Second", "Third", "Fourth"]) {
+    await createTextNote(page, { title, body: long });
+  }
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(0);
+
+  await page.getByRole("button", { name: /^Long/ }).click();
+
+  await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue(
+    "Long",
+  );
+  await expect(page.getByRole("textbox", { name: "Title" })).toBeInViewport();
+});
