@@ -44,12 +44,15 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
 - A Playwright project's reusable test-helper file belongs at
   `e2e/utils.ts`, not `fixtures.ts` — these are plain functions specs call
   directly, not Playwright's own `test.extend()` fixture-injection system.
-- **Storage.** `src/lib/storage.ts` is the in-memory + IndexedDB
-  write-through store for notes (maat-core's `docs/storage.md`), read
-  through `src/hooks/use-notes.ts`. Notes are validated per entry
-  (`schemas.ts`); a note with no title and no content is never kept
-  (`note-utils.ts`'s `isEmptyNote`). Backups and the pre-update snapshot
-  share one format (`backup.ts`, `app-update.ts`).
+- **Storage.** The local pattern (maat-core's `docs/storage.md`; notes
+  never go to a repository — STRUCTURE.md's rule): `src/lib/storage.ts`
+  is `@maat-apps/core/local`'s `createLocalStore` (`notesStore`) plus the
+  note mutations, read through `src/hooks/use-notes.ts`. Notes are
+  validated per entry (`schemas.ts`); a note with no title and no content
+  is never kept (`note-utils.ts`'s `isEmptyNote`). Backups and the
+  pre-update snapshot are core's `createLocalBackup` (`backup.ts`,
+  re-exported by `app-update.ts`); `app-lock.ts` wires both through
+  `lockData`.
 - **Screens.** `src/app/router.tsx`: `/` (`views/home`: the list, pinned
   section, FAB → `new-note-menu.tsx`, settings drawer; a long press let go
   without moving — the drag sensor's `onDragEnd` with no delta — selects
