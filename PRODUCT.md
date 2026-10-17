@@ -9,7 +9,7 @@ about the user leaves the device.
 
 ## Platform
 
-web - PWA, mobile-only (like routines and trainer).
+web - PWA, mobile-only (like routines, albums and gym-charts).
 
 ## Note types
 
