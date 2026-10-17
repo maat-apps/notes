@@ -1,5 +1,5 @@
 import { PushPinSimple } from "@phosphor-icons/react";
-import { startTransition, useState } from "react";
+import { startTransition, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { AppBar } from "@maat-apps/ui/app-bar";
@@ -57,6 +57,12 @@ export function NoteEditor({
   const [menuOpen, setMenuOpen] = useState(false);
   const [history, setHistory] = useState<History>(EMPTY_HISTORY);
   const savedAt = useNote(note.id)?.updatedAt;
+
+  // A note opens at its top: the list's scroll position would otherwise
+  // carry over and hide the title and first lines of a long note.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   function change(next: Note) {
     setHistory((current) => recordChange(current, note, next, Date.now()));
@@ -123,7 +129,7 @@ export function NoteEditor({
         value={note.title}
         aria-label={t("title")}
         placeholder={t("titlePlaceholder")}
-        className="placeholder:text-muted-foreground w-full bg-transparent text-xl font-semibold outline-none"
+        className="placeholder:text-muted-foreground w-full bg-transparent text-2xl font-normal outline-none"
         onChange={(event) => change({ ...note, title: event.target.value })}
       />
       {note.type === "text" ? (

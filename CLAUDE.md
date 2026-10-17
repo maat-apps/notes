@@ -60,7 +60,7 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   sensor's `onDragEnd` with no delta — selects cards, and
   `selection-bar.tsx`, also a `BottomBar`, replaces it while any are),
   `/new/:type` and `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
-  saves on every change (no Save button); a new note only reaches storage
+  saves on every change (no Save button) and opens scrolled to the top (the list's scroll would carry over); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so
   emptying it mid-edit (which deletes it) doesn't unmount the editor.
   Checklist item operations are pure helpers in `lib/checklist-utils.ts`,
