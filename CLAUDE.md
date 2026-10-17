@@ -56,11 +56,12 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   `mergeNotes`: adds missing notes, the newer `updatedAt` wins, nothing is
   deleted); only the pre-update snapshot restore (`applyBackup`) replaces.
 - **Screens.** Keep-style layout, one column. `src/app/router.tsx`: `/`
-  (`views/home`: a title that scrolls away, the list — outlined cards, a
-  pinned section — and `@maat-apps/ui`'s `BottomBar`: settings, new
-  checklist, new note; a long press let go without moving — the drag
-  sensor's `onDragEnd` with no delta — selects cards, and
-  `selection-bar.tsx`, also a `BottomBar`, replaces it while any are),
+  (`views/home`: a fixed header with the title and the settings gear, as
+  in routines; the list — outlined cards, a pinned section — and a 56px
+  FAB → `new-note-menu.tsx`, which fans out a text note and a checklist;
+  a long press let go without moving — the drag sensor's `onDragEnd` with
+  no delta — selects cards, and `selection-bar.tsx`, a `BottomBar`,
+  replaces the FAB while any are),
   `/new/:type` and `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
   saves on every change (no Save button) and opens scrolled to the top (the list's scroll would carry over); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so

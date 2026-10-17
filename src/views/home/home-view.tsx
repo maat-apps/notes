@@ -17,15 +17,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckSquare, Gear, Plus } from "@phosphor-icons/react";
+import { Gear } from "@phosphor-icons/react";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { useNavigate } from "react-router";
 
-import { BottomBar, BottomBarButton } from "@maat-apps/ui/bottom-bar";
+import { Button } from "@maat-apps/ui/button";
 import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
 import { EmptyState } from "@maat-apps/ui/empty-state";
-import { PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
+import { PageHeader, PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
 import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
@@ -39,6 +39,7 @@ import {
 } from "../../lib/view-transition";
 import { SettingsDrawer } from "../settings/settings-drawer";
 
+import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 import { SelectionBar } from "./selection-bar";
 
@@ -142,6 +143,7 @@ export function HomeView() {
   const navigate = useNavigate();
   const notes = useNotes();
   const { pinned, others } = groupNotes(notes);
+  const [newNoteOpen, setNewNoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -207,12 +209,23 @@ export function HomeView() {
   }
 
   function create(type: NoteType) {
+    setNewNoteOpen(false);
     openWithTransition(`/new/${type}`);
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-10">
-      <PageTitle>{t("appName")}</PageTitle>
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-28 pb-[calc(96px+env(safe-area-inset-bottom))]">
+      <PageHeader>
+        <PageTitle>{t("appName")}</PageTitle>
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          aria-label={t("settings")}
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Gear className="size-6" />
+        </Button>
+      </PageHeader>
       {notes.length === 0 ? (
         <EmptyState
           title={t("emptyTitle")}
@@ -247,33 +260,11 @@ export function HomeView() {
           onDelete={askToDeleteSelected}
         />
       ) : (
-        // As in Keep: a new list one tap away, a new note on the big button.
-        <BottomBar
-          settings={
-            <BottomBarButton
-              label={t("settings")}
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Gear />
-            </BottomBarButton>
-          }
-          action={
-            <BottomBarButton
-              label={t("newNote")}
-              variant="primary"
-              onClick={() => create("text")}
-            >
-              <Plus />
-            </BottomBarButton>
-          }
-        >
-          <BottomBarButton
-            label={t("newChecklist")}
-            onClick={() => create("checklist")}
-          >
-            <CheckSquare />
-          </BottomBarButton>
-        </BottomBar>
+        <NewNoteMenu
+          open={newNoteOpen}
+          onOpenChange={setNewNoteOpen}
+          onCreate={create}
+        />
       )}
       <ConfirmDrawer
         open={confirmDelete}
