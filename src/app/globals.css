@@ -9,3 +9,18 @@
    doesn't scan by default — without this their classes get purged. The
    whole dist/, because shared chunk-*.js files have no stable names. */
 @source "../../node_modules/@maat-apps/ui/dist";
+
+/* View transitions (src/lib/view-transition.ts): short and eased like Keep's
+   motion; none at all for people who asked for less motion. */
+::view-transition-group(*) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

@@ -20,7 +20,6 @@ export async function createTextNote(
   { title, body }: { title?: string; body?: string },
 ) {
   await page.getByRole("button", { name: "New note" }).click();
-  await page.getByRole("button", { name: "Text note" }).click();
   if (title) await page.getByRole("textbox", { name: "Title" }).fill(title);
   if (body) await page.getByRole("textbox", { name: "Note" }).fill(body);
   await page.getByRole("button", { name: "Back" }).click();
@@ -57,8 +56,7 @@ export async function deleteOpenNote(page: Page) {
 
 /** Opens a new checklist and waits until its first item has focus. */
 export async function newChecklist(page: Page) {
-  await page.getByRole("button", { name: "New note" }).click();
-  await page.getByRole("button", { name: "Checklist" }).click();
+  await page.getByRole("button", { name: "New checklist" }).click();
   await expect(
     page.getByRole("textbox", { name: "List item" }).first(),
   ).toBeFocused();

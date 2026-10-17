@@ -25,6 +25,7 @@ import {
   saveNote,
   setPinned,
 } from "../../lib/storage";
+import { noteTransitionName } from "../../lib/view-transition";
 
 import { ChecklistFields } from "./checklist-fields";
 import { NoteMenu } from "./note-menu";
@@ -94,7 +95,12 @@ export function NoteEditor({
   }
 
   return (
-    <div className="mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(88px+env(safe-area-inset-bottom))]">
+    <div
+      data-note-editor
+      // The card in the list grows into this (home-view.tsx).
+      style={{ viewTransitionName: noteTransitionName(note.id) }}
+      className="bg-background mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(88px+env(safe-area-inset-bottom))]"
+    >
       <AppBar
         backLabel={t("back")}
         onBack={() => startTransition(back)}

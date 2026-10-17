@@ -17,23 +17,28 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Gear } from "@phosphor-icons/react";
-import { startTransition, useState } from "react";
+import { CheckSquare, Gear, Plus } from "@phosphor-icons/react";
+import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router";
 
-import { Button } from "@maat-apps/ui/button";
+import { BottomBar, BottomBarButton } from "@maat-apps/ui/bottom-bar";
 import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
 import { EmptyState } from "@maat-apps/ui/empty-state";
-import { PageHeader, PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
+import { PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
 import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
 import { groupNotes } from "../../lib/note-utils";
 import type { Note, NoteType } from "../../lib/schemas";
 import { deleteNotes, setNoteOrder, setPinnedNotes } from "../../lib/storage";
+import {
+  noteTransitionName,
+  untilRendered,
+  withViewTransition,
+} from "../../lib/view-transition";
 import { SettingsDrawer } from "../settings/settings-drawer";
 
-import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 import { SelectionBar } from "./selection-bar";
 
@@ -61,7 +66,13 @@ function SortableNoteCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        // Shared with the open note: the card grows into it (and the list
+        // closes up after a delete).
+        viewTransitionName: noteTransitionName(note.id),
+      }}
       className={`select-none [-webkit-touch-callout:none] ${isDragging ? "relative z-10 shadow-lg" : ""}`}
       {...listeners}
     >
@@ -103,7 +114,7 @@ function NoteSection({
   }
 
   return (
-    <section className="grid gap-3" aria-label={title}>
+    <section className="grid gap-2" aria-label={title}>
       {title && <SectionTitle>{title}</SectionTitle>}
       <DndContext
         sensors={sensors}
@@ -131,7 +142,6 @@ export function HomeView() {
   const navigate = useNavigate();
   const notes = useNotes();
   const { pinned, others } = groupNotes(notes);
-  const [newNoteOpen, setNewNoteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -147,8 +157,16 @@ export function HomeView() {
   const selecting = selectedNotes.length > 0;
   const allPinned = selectedNotes.every((note) => note.pinned);
 
+  /** Navigates within a view transition, once the note's screen is there. */
+  function openWithTransition(path: string) {
+    withViewTransition(async () => {
+      flushSync(() => navigate(path));
+      await untilRendered("[data-note-editor]");
+    });
+  }
+
   function open(id: string) {
-    startTransition(() => navigate(`/${encodeURIComponent(id)}`));
+    openWithTransition(`/${encodeURIComponent(id)}`);
   }
 
   function toggleSelected(id: string) {
@@ -178,29 +196,23 @@ export function HomeView() {
   }
 
   function deleteSelected() {
-    deleteNotes([...selectedIds]);
-    clearSelection();
     setConfirmDelete(false);
+    // The cards left behind slide up into the gap.
+    withViewTransition(() =>
+      flushSync(() => {
+        deleteNotes([...selectedIds]);
+        clearSelection();
+      }),
+    );
   }
 
   function create(type: NoteType) {
-    setNewNoteOpen(false);
-    startTransition(() => navigate(`/new/${type}`));
+    openWithTransition(`/new/${type}`);
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-28 pb-[calc(128px+env(safe-area-inset-bottom))]">
-      <PageHeader>
-        <PageTitle>{t("appName")}</PageTitle>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          aria-label={t("settings")}
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Gear className="size-6" />
-        </Button>
-      </PageHeader>
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-10">
+      <PageTitle>{t("appName")}</PageTitle>
       {notes.length === 0 ? (
         <EmptyState
           title={t("emptyTitle")}
@@ -235,11 +247,33 @@ export function HomeView() {
           onDelete={askToDeleteSelected}
         />
       ) : (
-        <NewNoteMenu
-          open={newNoteOpen}
-          onOpenChange={setNewNoteOpen}
-          onCreate={create}
-        />
+        // As in Keep: a new list one tap away, a new note on the big button.
+        <BottomBar
+          settings={
+            <BottomBarButton
+              label={t("settings")}
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Gear />
+            </BottomBarButton>
+          }
+          action={
+            <BottomBarButton
+              label={t("newNote")}
+              variant="primary"
+              onClick={() => create("text")}
+            >
+              <Plus />
+            </BottomBarButton>
+          }
+        >
+          <BottomBarButton
+            label={t("newChecklist")}
+            onClick={() => create("checklist")}
+          >
+            <CheckSquare />
+          </BottomBarButton>
+        </BottomBar>
       )}
       <ConfirmDrawer
         open={confirmDelete}

@@ -131,7 +131,7 @@ test("a long item wraps onto more lines of the same item", async ({ page }) => {
   const oneLine = await item.boundingBox();
 
   await page.keyboard.type(
-    "Remember to buy oat milk, sourdough bread, free-range eggs and coffee",
+    "Remember to buy oat milk, sourdough bread, free-range eggs, coffee beans and a big bunch of fresh basil",
   );
 
   await expect(item).toHaveCount(1);

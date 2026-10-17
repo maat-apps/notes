@@ -4,7 +4,6 @@ import { createTextNote, goHome } from "./utils";
 
 async function newTextNote(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "New note" }).click();
-  await page.getByRole("button", { name: "Text note" }).click();
   await expect(page.getByRole("textbox", { name: "Note" })).toBeFocused();
 }
 
@@ -53,6 +52,10 @@ test("a note is copied from the menu", async ({ page }) => {
   await goHome(page);
   await createTextNote(page, { title: "Ideas", body: "Plan the trip" });
   await page.getByRole("button", { name: /Ideas/ }).click();
+  // Opening animates (a view transition), so the URL changes a frame later.
+  await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue(
+    "Ideas",
+  );
   const original = page.url();
 
   await page.getByRole("button", { name: "More" }).click();
