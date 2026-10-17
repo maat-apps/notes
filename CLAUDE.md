@@ -52,7 +52,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   is never kept (`note-utils.ts`'s `isEmptyNote`). Backups and the
   pre-update snapshot are core's `createLocalBackup` (`backup.ts`,
   re-exported by `app-update.ts`); `app-lock.ts` wires both through
-  `lockData`.
+  `lockData`. A Settings import merges (`mergeBackup`, `note-utils.ts`'s
+  `mergeNotes`: adds missing notes, the newer `updatedAt` wins, nothing is
+  deleted); only the pre-update snapshot restore (`applyBackup`) replaces.
 - **Screens.** Keep-style layout, one column. `src/app/router.tsx`: `/`
   (`views/home`: a title that scrolls away, the list — outlined cards, a
   pinned section — and `@maat-apps/ui`'s `BottomBar`: settings, new

@@ -7,7 +7,7 @@ import {
 import { encryptionKey } from "./encryption-key";
 import { keyValueStore } from "./idb-store";
 import type { Note } from "./schemas";
-import { notesStore } from "./storage";
+import { mergeIntoNotes, notesStore } from "./storage";
 import { SNAPSHOT_KEY } from "./storage-keys";
 
 // notes' backup and pre-update snapshot (@maat-apps/core/local): the notes
@@ -42,8 +42,13 @@ export const parseBackup = backups.parse;
 /** Same validation for an already-parsed value (e.g. the update snapshot). */
 export const parseBackupValue = backups.parseValue;
 
-/** Overwrites every note with the backup's. */
+/** Overwrites every note with the backup's — restoring the update snapshot. */
 export const applyBackup = backups.apply;
+
+/** Import from Settings: keeps the notes on the device and adds the backup's. */
+export function mergeBackup(backup: Backup): void {
+  mergeIntoNotes(backup.data.notes);
+}
 
 export const backupFileName = backups.fileName;
 export const downloadBackup = backups.download;

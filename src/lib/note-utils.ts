@@ -52,6 +52,21 @@ export function groupNotes(notes: Note[]): { pinned: Note[]; others: Note[] } {
   };
 }
 
+/**
+ * `current` plus the `incoming` notes it lacks; a note in both keeps the
+ * more recently edited version, and ties keep the current one. Notes missing
+ * from `incoming` are left alone — a merge never deletes.
+ */
+export function mergeNotes(current: Note[], incoming: Note[]): Note[] {
+  const incomingById = new Map(incoming.map((note) => [note.id, note]));
+  const merged = current.map((note) => {
+    const other = incomingById.get(note.id);
+    return other && other.updatedAt > note.updatedAt ? other : note;
+  });
+  const currentIds = new Set(current.map((note) => note.id));
+  return [...merged, ...incoming.filter((note) => !currentIds.has(note.id))];
+}
+
 /** A copy of `note` as a new, unpinned note at the top of the list. */
 export function duplicateNote(note: Note, now = new Date()): Note {
   return {
