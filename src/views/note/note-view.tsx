@@ -33,8 +33,10 @@ export function NoteView() {
   const stored = useNote(id);
   // Latched on first sight: emptying the note deletes it from the store,
   // but the editor (and its draft) must stay put while the user types.
-  const [opened, setOpened] = useState<Note | null>(null);
-  if (!opened && stored) setOpened(stored);
+  const [latched, setLatched] = useState<Note | null>(null);
+  // Another id (opening a copy) starts over with that note.
+  const opened = latched?.id === id ? latched : null;
+  if (!opened && stored) setLatched(stored);
 
   if (opened)
     return <NoteEditor key={opened.id} initial={opened} isNew={false} />;

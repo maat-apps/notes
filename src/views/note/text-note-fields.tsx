@@ -1,7 +1,13 @@
 import { useTranslation } from "../../i18n/use-translation";
+import { findLinks } from "../../lib/links";
 import type { TextNote } from "../../lib/schemas";
 
-/** A plain-text note's body — no formatting (PRODUCT.md). */
+import { LinkList } from "./link-list";
+
+/**
+ * A plain-text note's body — no formatting (PRODUCT.md). A textarea can't
+ * hold a tappable link, so the links in the body are listed below it.
+ */
 export function TextNoteFields({
   note,
   autoFocus,
@@ -13,13 +19,16 @@ export function TextNoteFields({
 }) {
   const { t } = useTranslation();
   return (
-    <textarea
-      value={note.body}
-      autoFocus={autoFocus}
-      aria-label={t("noteBody")}
-      placeholder={t("notePlaceholder")}
-      className="placeholder:text-muted-foreground [field-sizing:content] min-h-40 w-full resize-none bg-transparent text-base leading-relaxed outline-none"
-      onChange={(event) => onChange({ ...note, body: event.target.value })}
-    />
+    <div className="grid gap-4">
+      <textarea
+        value={note.body}
+        autoFocus={autoFocus}
+        aria-label={t("noteBody")}
+        placeholder={t("notePlaceholder")}
+        className="placeholder:text-muted-foreground [field-sizing:content] min-h-40 w-full resize-none bg-transparent text-base leading-relaxed outline-none"
+        onChange={(event) => onChange({ ...note, body: event.target.value })}
+      />
+      <LinkList links={findLinks(note.body)} />
+    </div>
   );
 }

@@ -44,16 +44,25 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
 - A Playwright project's reusable test-helper file belongs at
   `e2e/utils.ts`, not `fixtures.ts` — these are plain functions specs call
   directly, not Playwright's own `test.extend()` fixture-injection system.
-- **Storage.** `src/lib/storage.ts` is the in-memory + IndexedDB
-  write-through store for notes (maat-core's `docs/storage.md`), read
-  through `src/hooks/use-notes.ts`. Notes are validated per entry
-  (`schemas.ts`); a note with no title and no content is never kept
-  (`note-utils.ts`'s `isEmptyNote`). Backups and the pre-update snapshot
-  share one format (`backup.ts`, `app-update.ts`).
-- **Screens.** `src/app/router.tsx`: `/` (`views/home`: the list, pinned
-  section, FAB → `new-note-drawer.tsx`, settings drawer), `/new/:type` and
-  `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
-  saves on every change (no Save button); a new note only reaches storage
+- **Storage.** The local pattern (maat-core's `docs/storage.md`; notes
+  never go to a repository — STRUCTURE.md's rule): `src/lib/storage.ts`
+  is `@maat-apps/core/local`'s `createLocalStore` (`notesStore`) plus the
+  note mutations, read through `src/hooks/use-notes.ts`. Notes are
+  validated per entry (`schemas.ts`); a note with no title and no content
+  is never kept (`note-utils.ts`'s `isEmptyNote`). Backups and the
+  pre-update snapshot are core's `createLocalBackup` (`backup.ts`,
+  re-exported by `app-update.ts`); `app-lock.ts` wires both through
+  `lockData`. A Settings import merges (`mergeBackup`, `note-utils.ts`'s
+  `mergeNotes`: adds missing notes, the newer `updatedAt` wins, nothing is
+  deleted); only the pre-update snapshot restore (`applyBackup`) replaces.
+- **Screens.** Keep-style layout, one column. `src/app/router.tsx`: `/`
+  (`views/home`: a title that scrolls away, the list — outlined cards, a
+  pinned section — and `@maat-apps/ui`'s `BottomBar`: settings, new
+  checklist, new note; a long press let go without moving — the drag
+  sensor's `onDragEnd` with no delta — selects cards, and
+  `selection-bar.tsx`, also a `BottomBar`, replaces it while any are),
+  `/new/:type` and `/:id` (`views/note/note-view.tsx`). `NoteEditor` keeps its own draft and
+  saves on every change (no Save button) and opens scrolled to the top (the list's scroll would carry over); a new note only reaches storage
   once it has content, and `NoteView` latches the note it opened so
   emptying it mid-edit (which deletes it) doesn't unmount the editor.
   Checklist item operations are pure helpers in `lib/checklist-utils.ts`,
@@ -61,9 +70,14 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   item belongs to the nearest top-level item above it (`parentId`,
   `childIds`), and `shownIndented` decides what's drawn nested in each
   rendered list.
-  Search (`lib/note-search.ts`) matches every word in titles, text and
-  checklist items, ignoring case and diacritics. Back uses
-  `useSmartBack("/")`. Settings is a drawer
+  Motion (`lib/view-transition.ts`, View Transitions API; nothing under
+  `prefers-reduced-motion` or without the API, CSS in `globals.css`): a card
+  grows into its note (card and editor share `noteTransitionName`; the
+  navigation waits for `[data-note-editor]`), checked items slide to
+  "Checked items" (`itemTransitionName`), the list closes up after a
+  delete. Opening a note therefore changes the URL a frame after the tap —
+  e2e waits for the editor, not the click.
+  Back uses `useSmartBack("/")`. Settings is a drawer
   (`views/settings/`), one `settings-<name>-section.tsx` per card.
 - **i18n.** `src/i18n/en.json` and `pl.json` (core's `createTranslation`;
   the device language picks on first launch, Settings → Language after).
@@ -74,7 +88,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   `@maat-apps/ui/app-lock-gate`, wrapped around the router in
   `src/app/router.tsx`). `src/lib/app-lock.ts` rewrites the notes with the
   current key and erases them plus the update snapshot; `storage.ts` and
-  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. **Never change
+  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. The lock comes back after
+  time in the background per `app-settings.ts`'s `relockAfter` (Settings →
+  Security; `relockAfterMs` feeds `createAppLock`). **Never change
   `HKDF_INFO` (`"notes-data-v1"`)** — existing encrypted notes would
   become unreadable.
 - Full pattern log: none yet — run `/learn-patterns` after a non-trivial

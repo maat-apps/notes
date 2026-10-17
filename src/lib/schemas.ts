@@ -22,6 +22,9 @@ const NoteFieldsSchema = v.object({
   pinned: v.fallback(v.boolean(), false),
   createdAt: v.string(),
   updatedAt: v.string(),
+  // Where the user dragged the note to (note-utils.ts's `orderNotes`).
+  // Absent until then, and again after the note is edited.
+  rank: v.optional(v.number()),
 });
 
 const TextNoteSchema = v.object({

@@ -1,42 +1,138 @@
-import { Gear, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { startTransition, useState } from "react";
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { CheckSquare, Gear, Plus } from "@phosphor-icons/react";
+import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useNavigate } from "react-router";
 
-import { Button } from "@maat-apps/ui/button";
+import { BottomBar, BottomBarButton } from "@maat-apps/ui/bottom-bar";
+import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
 import { EmptyState } from "@maat-apps/ui/empty-state";
-import { FabButton } from "@maat-apps/ui/fab-button";
-import { Input } from "@maat-apps/ui/input";
-import { PageHeader } from "@maat-apps/ui/page-header";
+import { PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
+import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
-import { searchNotes } from "../../lib/note-search";
 import { groupNotes } from "../../lib/note-utils";
 import type { Note, NoteType } from "../../lib/schemas";
+import { deleteNotes, setNoteOrder, setPinnedNotes } from "../../lib/storage";
+import {
+  noteTransitionName,
+  untilRendered,
+  withViewTransition,
+} from "../../lib/view-transition";
 import { SettingsDrawer } from "../settings/settings-drawer";
 
-import { NewNoteDrawer } from "./new-note-drawer";
 import { NoteCard } from "./note-card";
+import { SelectionBar } from "./selection-bar";
+
+// A long press lifts a card: dragged, it moves the card; let go where it was
+// picked up, it selects (or deselects) the card instead.
+const LONG_PRESS = { delay: 250, tolerance: 8 };
+
+/**
+ * A card that a long press picks up — only the card's drag, not its tap.
+ * It follows the finger with a plain translate: the sortable's own
+ * transform also scales the card to the size of the one it passes, which
+ * stretches a short card (and its text) over a tall one.
+ */
+function SortableNoteCard({
+  note,
+  selected,
+  onClick,
+}: {
+  note: Note;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const { setNodeRef, transform, transition, listeners, isDragging } =
+    useSortable({ id: note.id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        // Shared with the open note: the card grows into it (and the list
+        // closes up after a delete).
+        viewTransitionName: noteTransitionName(note.id),
+      }}
+      className={`select-none [-webkit-touch-callout:none] ${isDragging ? "relative z-10 shadow-lg" : ""}`}
+      {...listeners}
+    >
+      <NoteCard note={note} selected={selected} onClick={onClick} />
+    </div>
+  );
+}
 
 function NoteSection({
   title,
   notes,
-  onOpen,
+  selectedIds,
+  onTap,
+  onLongPress,
+  onReorder,
 }: {
   title?: string;
   notes: Note[];
-  onOpen: (id: string) => void;
+  selectedIds: Set<string>;
+  onTap: (id: string) => void;
+  onLongPress: (id: string) => void;
+  onReorder: (orderedIds: string[]) => void;
 }) {
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: LONG_PRESS }),
+    useSensor(TouchSensor, { activationConstraint: LONG_PRESS }),
+  );
   if (notes.length === 0) return null;
+  const ids = notes.map((note) => note.id);
+
+  function handleDragEnd({ active, over, delta }: DragEndEvent) {
+    if (Math.hypot(delta.x, delta.y) < LONG_PRESS.tolerance) {
+      onLongPress(String(active.id));
+      return;
+    }
+    if (!over) return;
+    const next = reorderIds(ids, String(active.id), String(over.id));
+    if (next) onReorder(next);
+  }
+
   return (
-    <section className="grid gap-2.5" aria-label={title}>
-      {title && (
-        <h2 className="text-muted-foreground m-0 px-1 text-xs font-semibold tracking-wide uppercase">
-          {title}
-        </h2>
-      )}
-      {notes.map((note) => (
-        <NoteCard key={note.id} note={note} onOpen={() => onOpen(note.id)} />
-      ))}
+    <section className="grid gap-2" aria-label={title}>
+      {title && <SectionTitle>{title}</SectionTitle>}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+          {notes.map((note) => (
+            <SortableNoteCard
+              key={note.id}
+              note={note}
+              selected={selectedIds.has(note.id)}
+              onClick={() => onTap(note.id)}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
     </section>
   );
 }
@@ -45,87 +141,156 @@ export function HomeView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const notes = useNotes();
-  const [query, setQuery] = useState("");
-  const results = searchNotes(notes, query);
-  const { pinned, others } = groupNotes(results);
-  const [newNoteOpen, setNewNoteOpen] = useState(false);
+  const { pinned, others } = groupNotes(notes);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Latched when the confirmation opens, so its title doesn't change while
+  // it closes over the emptied selection.
+  const [deleteCount, setDeleteCount] = useState(0);
+
+  const pinnedIds = pinned.map((note) => note.id);
+  const otherIds = others.map((note) => note.id);
+  // A selected note can vanish under the selection (deleted elsewhere).
+  const selectedNotes = notes.filter((note) => selection.has(note.id));
+  const selectedIds = new Set(selectedNotes.map((note) => note.id));
+  const selecting = selectedNotes.length > 0;
+  const allPinned = selectedNotes.every((note) => note.pinned);
+
+  /** Navigates within a view transition, once the note's screen is there. */
+  function openWithTransition(path: string) {
+    void withViewTransition(async () => {
+      flushSync(() => navigate(path));
+      await untilRendered("[data-note-editor]");
+    });
+  }
 
   function open(id: string) {
-    startTransition(() => navigate(`/${encodeURIComponent(id)}`));
+    openWithTransition(`/${encodeURIComponent(id)}`);
+  }
+
+  function toggleSelected(id: string) {
+    const next = new Set(selectedIds);
+    if (!next.delete(id)) next.add(id);
+    setSelection(next);
+  }
+
+  function clearSelection() {
+    setSelection(new Set());
+  }
+
+  /** While anything is selected, a tap selects or deselects instead. */
+  function tap(id: string) {
+    if (selecting) toggleSelected(id);
+    else open(id);
+  }
+
+  function togglePinSelected() {
+    setPinnedNotes([...selectedIds], !allPinned);
+    clearSelection();
+  }
+
+  function askToDeleteSelected() {
+    setDeleteCount(selectedNotes.length);
+    setConfirmDelete(true);
+  }
+
+  function deleteSelected() {
+    setConfirmDelete(false);
+    // The cards left behind slide up into the gap.
+    void withViewTransition(() =>
+      flushSync(() => {
+        deleteNotes([...selectedIds]);
+        clearSelection();
+      }),
+    );
   }
 
   function create(type: NoteType) {
-    setNewNoteOpen(false);
-    startTransition(() => navigate(`/new/${type}`));
+    openWithTransition(`/new/${type}`);
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-5 px-5 pt-27 pb-[calc(96px+env(safe-area-inset-bottom))]">
-      <PageHeader>
-        <h1 className="font-heading m-0 text-3xl leading-[1.05] font-bold tracking-tight">
-          {t("appName")}
-        </h1>
-        <Button
-          variant="ghost"
-          size="icon-lg"
-          aria-label={t("settings")}
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Gear className="size-6" />
-        </Button>
-      </PageHeader>
-      {notes.length > 0 && (
-        <div className="relative">
-          <MagnifyingGlass
-            aria-hidden="true"
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2"
-          />
-          <Input
-            type="search"
-            value={query}
-            aria-label={t("searchNotes")}
-            placeholder={t("searchNotes")}
-            className="pl-10"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </div>
-      )}
+    <div className="mx-auto flex min-h-dvh w-[min(100%,480px)] flex-col gap-4 px-5 pt-10">
+      <PageTitle>{t("appName")}</PageTitle>
       {notes.length === 0 ? (
         <EmptyState
           title={t("emptyTitle")}
           description={t("emptyDescription")}
-        />
-      ) : results.length === 0 ? (
-        <EmptyState
-          title={t("noMatchesTitle")}
-          description={t("noMatchesDescription")}
         />
       ) : (
         <>
           <NoteSection
             title={pinned.length > 0 ? t("pinned") : undefined}
             notes={pinned}
-            onOpen={open}
+            selectedIds={selectedIds}
+            onTap={tap}
+            onLongPress={toggleSelected}
+            onReorder={(ids) => setNoteOrder([...ids, ...otherIds])}
           />
           <NoteSection
             title={pinned.length > 0 ? t("others") : undefined}
             notes={others}
-            onOpen={open}
+            selectedIds={selectedIds}
+            onTap={tap}
+            onLongPress={toggleSelected}
+            onReorder={(ids) => setNoteOrder([...pinnedIds, ...ids])}
           />
         </>
       )}
-      <FabButton
-        className="fixed right-[max(20px,calc((100vw-480px)/2+20px))] bottom-[calc(20px+env(safe-area-inset-bottom))] z-20"
-        ariaLabel={t("newNote")}
-        onClick={() => setNewNoteOpen(true)}
-      >
-        <Plus className="size-6" />
-      </FabButton>
-      <NewNoteDrawer
-        open={newNoteOpen}
-        onOpenChange={setNewNoteOpen}
-        onCreate={create}
+      {selecting ? (
+        <SelectionBar
+          count={selectedNotes.length}
+          allPinned={allPinned}
+          onClear={clearSelection}
+          onTogglePin={togglePinSelected}
+          onDelete={askToDeleteSelected}
+        />
+      ) : (
+        // As in Keep: a new list one tap away, a new note on the big button.
+        <BottomBar
+          settings={
+            <BottomBarButton
+              label={t("settings")}
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Gear />
+            </BottomBarButton>
+          }
+          action={
+            <BottomBarButton
+              label={t("newNote")}
+              variant="primary"
+              onClick={() => create("text")}
+            >
+              <Plus />
+            </BottomBarButton>
+          }
+        >
+          <BottomBarButton
+            label={t("newChecklist")}
+            onClick={() => create("checklist")}
+          >
+            <CheckSquare />
+          </BottomBarButton>
+        </BottomBar>
+      )}
+      <ConfirmDrawer
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={
+          deleteCount === 1
+            ? t("deleteNoteTitle")
+            : t("deleteNotesTitle", { count: deleteCount })
+        }
+        description={
+          deleteCount === 1
+            ? t("deleteNoteDescription")
+            : t("deleteNotesDescription")
+        }
+        cancelLabel={t("cancel")}
+        confirmLabel={t("delete")}
+        onConfirm={deleteSelected}
       />
       <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>

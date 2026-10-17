@@ -1,4 +1,8 @@
-import { parseLockEnrolment, type LockEnrolment } from "@maat-apps/core/lock";
+import {
+  DEFAULT_RELOCK_AFTER_MS,
+  parseLockEnrolment,
+  type LockEnrolment,
+} from "@maat-apps/core/lock";
 import { createPersistedStore } from "@maat-apps/core/persisted";
 
 import { keyValueStore } from "./idb-store";
@@ -7,20 +11,34 @@ import { SETTINGS_KEY } from "./storage-keys";
 // Settings that aren't part of the app's data (or a backup): the app lock's
 // enrolment and browser/install state. @maat-apps/core/persisted keeps them
 // in memory, backed by IndexedDB.
+/** Right away, after 30 seconds in the background, or only once closed. */
+export const RELOCK_CHOICES = ["now", "30s", "close"] as const;
+export type RelockAfter = (typeof RELOCK_CHOICES)[number];
+
+const RELOCK_AFTER_MS: Record<RelockAfter, number | null> = {
+  now: 0,
+  "30s": DEFAULT_RELOCK_AFTER_MS,
+  close: null,
+};
+
 export type AppSettings = {
   /** The app lock's enrolment (@maat-apps/core/lock), `null` when off. */
   lock: LockEnrolment | null;
+  /** How soon the lock comes back once the app is left. */
+  relockAfter: RelockAfter;
   installed: boolean;
 };
 
 const settingsStore = createPersistedStore<AppSettings>({
   storage: keyValueStore,
   key: SETTINGS_KEY,
-  defaults: { lock: null, installed: false },
+  defaults: { lock: null, relockAfter: "30s", installed: false },
   parse: (stored) => {
     const value = stored as Record<string, unknown>;
     return {
       lock: parseLockEnrolment(value.lock),
+      relockAfter:
+        RELOCK_CHOICES.find((choice) => choice === value.relockAfter) ?? "30s",
       installed: value.installed === true,
     };
   },
@@ -46,6 +64,15 @@ export function setLockEnrolment(lock: LockEnrolment | null): void {
 
 /** Chrome stops offering the install prompt once installed, even to a plain
  * browser tab — this flag is the only record of it. */
+export function setRelockAfter(relockAfter: RelockAfter): void {
+  settingsStore.set({ relockAfter });
+}
+
+/** The lock's `relockAfterMs`: read on every hide, so a change applies at once. */
+export function relockAfterMs(): number | null {
+  return RELOCK_AFTER_MS[getSettingsSnapshot().relockAfter];
+}
+
 export function markInstalled(): void {
   if (getSettingsSnapshot().installed) return;
   settingsStore.set({ installed: true });

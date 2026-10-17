@@ -1,12 +1,23 @@
-import { PushPin, PushPinSlash, Trash } from "@phosphor-icons/react";
-import { startTransition, useState } from "react";
+import { PushPinSimple } from "@phosphor-icons/react";
+import { startTransition, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { AppBar } from "@maat-apps/ui/app-bar";
 import { Button } from "@maat-apps/ui/button";
 import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
 import { useSmartBack } from "@maat-apps/ui/smart-back";
+import { useNote } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
+import {
+  canRedo,
+  canUndo,
+  EMPTY_HISTORY,
+  type History,
+  recordChange,
+  redo,
+  undo,
+} from "../../lib/note-history";
+import { convertNote, duplicateNote, isEmptyNote } from "../../lib/note-utils";
 import type { Note } from "../../lib/schemas";
 import {
   deleteNote,
@@ -14,8 +25,11 @@ import {
   saveNote,
   setPinned,
 } from "../../lib/storage";
+import { noteTransitionName } from "../../lib/view-transition";
 
 import { ChecklistFields } from "./checklist-fields";
+import { NoteMenu } from "./note-menu";
+import { NoteToolbar } from "./note-toolbar";
 import { TextNoteFields } from "./text-note-fields";
 
 function isStored(id: string): boolean {
@@ -40,10 +54,37 @@ export function NoteEditor({
   const back = useSmartBack("/");
   const [note, setNote] = useState(initial);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [history, setHistory] = useState<History>(EMPTY_HISTORY);
+  const savedAt = useNote(note.id)?.updatedAt;
+
+  // A note opens at its top: the list's scroll position would otherwise
+  // carry over and hide the title and first lines of a long note.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   function change(next: Note) {
+    setHistory((current) => recordChange(current, note, next, Date.now()));
     setNote(next);
     saveNote(next);
+  }
+
+  // Undo and redo restore what the note said, not whether it was pinned:
+  // pinning isn't an edit.
+  function step(result: { history: History; note: Note } | null) {
+    if (!result) return;
+    const restored = { ...result.note, pinned: note.pinned };
+    setHistory(result.history);
+    setNote(restored);
+    saveNote(restored);
+  }
+
+  function copy() {
+    if (isEmptyNote(note)) return;
+    const duplicate = duplicateNote(note);
+    saveNote(duplicate);
+    navigate(`/${encodeURIComponent(duplicate.id)}`, { replace: true });
   }
 
   function togglePin() {
@@ -60,42 +101,35 @@ export function NoteEditor({
   }
 
   return (
-    <div className="mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(32px+env(safe-area-inset-bottom))]">
+    <div
+      data-note-editor
+      // The card in the list grows into this (home-view.tsx).
+      style={{ viewTransitionName: noteTransitionName(note.id) }}
+      className="bg-background mx-auto grid min-h-dvh w-[min(100%,480px)] content-start gap-4 px-5 pt-27 pb-[calc(88px+env(safe-area-inset-bottom))]"
+    >
       <AppBar
-        title={note.type === "text" ? t("textNote") : t("checklist")}
         backLabel={t("back")}
         onBack={() => startTransition(back)}
         action={
-          <div className="flex">
-            <Button
-              variant="ghost"
-              size="icon-lg"
-              aria-label={note.pinned ? t("unpin") : t("pin")}
-              aria-pressed={note.pinned}
-              onClick={togglePin}
-            >
-              {note.pinned ? (
-                <PushPinSlash className="size-6" />
-              ) : (
-                <PushPin className="size-6" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-lg"
-              aria-label={t("deleteNote")}
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash className="size-6" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            aria-label={note.pinned ? t("unpin") : t("pin")}
+            aria-pressed={note.pinned}
+            onClick={togglePin}
+          >
+            <PushPinSimple
+              weight={note.pinned ? "fill" : "regular"}
+              className="size-6"
+            />
+          </Button>
         }
       />
       <input
         value={note.title}
         aria-label={t("title")}
         placeholder={t("titlePlaceholder")}
-        className="placeholder:text-muted-foreground w-full bg-transparent text-xl font-semibold outline-none"
+        className="placeholder:text-muted-foreground w-full bg-transparent text-2xl font-normal outline-none"
         onChange={(event) => change({ ...note, title: event.target.value })}
       />
       {note.type === "text" ? (
@@ -103,6 +137,22 @@ export function NoteEditor({
       ) : (
         <ChecklistFields note={note} autoFocus={isNew} onChange={change} />
       )}
+      <NoteToolbar
+        updatedAt={savedAt}
+        canUndo={canUndo(history)}
+        canRedo={canRedo(history)}
+        onUndo={() => step(undo(history, note))}
+        onRedo={() => step(redo(history, note))}
+        onMore={() => setMenuOpen(true)}
+      />
+      <NoteMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        type={note.type}
+        onCopy={copy}
+        onConvert={() => change(convertNote(note))}
+        onDelete={() => setConfirmDelete(true)}
+      />
       <ConfirmDrawer
         open={confirmDelete}
         onOpenChange={setConfirmDelete}

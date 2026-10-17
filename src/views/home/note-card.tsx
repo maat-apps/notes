@@ -5,7 +5,7 @@ import { useTranslation } from "../../i18n/use-translation";
 import { shownIndented, splitItems } from "../../lib/checklist-utils";
 import type { Note } from "../../lib/schemas";
 
-const PREVIEW_ITEMS = 5;
+const PREVIEW_ITEMS = 8;
 
 function ChecklistPreview({
   note,
@@ -18,7 +18,7 @@ function ChecklistPreview({
   const indented = shownIndented(note.items, shown);
   const hidden = unchecked.length - shown.length;
   return (
-    <ul className="m-0 grid list-none gap-1 p-0">
+    <ul className="m-0 grid list-none gap-1.5 p-0">
       {shown.map((item) => (
         <li
           key={item.id}
@@ -43,18 +43,33 @@ function ChecklistPreview({
   );
 }
 
-/** One note in the list: its title (if any) and a preview of its content. */
-export function NoteCard({ note, onOpen }: { note: Note; onOpen: () => void }) {
+/**
+ * One note in the list, as in Keep: an outlined card (no filled surface)
+ * with its title (if any) and a clipped preview of its content. A selected
+ * card gets a bold outline and settles in slightly.
+ */
+export function NoteCard({
+  note,
+  selected,
+  onClick,
+}: {
+  note: Note;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
-    <ListRow onClick={onOpen} className="items-start">
-      <div className="grid min-w-0 flex-1 gap-1.5 text-left text-sm">
+    <ListRow
+      onClick={onClick}
+      className={`min-h-0 items-start bg-transparent px-4 py-3 transition-[transform,box-shadow,border-color] duration-150 ease-out motion-reduce:transition-none ${selected ? "border-foreground ring-foreground scale-[0.98] ring-2" : ""}`}
+    >
+      <div className="grid min-w-0 flex-1 gap-2 text-left text-sm leading-5">
         {note.title && (
-          <h3 className="m-0 text-base font-semibold break-words">
+          <h3 className="m-0 text-base leading-6 font-medium break-words">
             {note.title}
           </h3>
         )}
         {note.type === "text" ? (
-          <p className="text-muted-foreground m-0 line-clamp-6 break-words whitespace-pre-line">
+          <p className="m-0 line-clamp-10 break-words whitespace-pre-line">
             {note.body}
           </p>
         ) : (

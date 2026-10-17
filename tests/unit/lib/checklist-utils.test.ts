@@ -5,6 +5,7 @@ import {
   childIds,
   createItem,
   insertItemAfter,
+  moveItem,
   nextItemIndented,
   parentId,
   previousUncheckedId,
@@ -156,5 +157,52 @@ describe("nesting", () => {
     const { unchecked, checked } = splitItems(items);
     expect([...shownIndented(items, unchecked)]).toEqual(["a2"]);
     expect([...shownIndented(items, checked)]).toEqual([]);
+  });
+});
+
+describe("moveItem", () => {
+  const nested = (id: string): ChecklistItem => ({
+    ...item(id),
+    indented: true,
+  });
+
+  it("moves an item down below the one it was dropped on", () => {
+    const items = [item("a"), item("b"), item("c")];
+    expect(ids(moveItem(items, "a", "c"))).toEqual(["b", "c", "a"]);
+  });
+
+  it("moves an item up above the one it was dropped on", () => {
+    const items = [item("a"), item("b"), item("c")];
+    expect(ids(moveItem(items, "c", "a"))).toEqual(["c", "a", "b"]);
+  });
+
+  it("takes a parent's children along", () => {
+    const items = [item("a"), nested("a1"), item("b"), item("c")];
+    expect(ids(moveItem(items, "a", "b"))).toEqual(["b", "a", "a1", "c"]);
+  });
+
+  it("lands beside the whole group of the parent it is dropped on", () => {
+    const items = [item("a"), item("b"), nested("b1"), item("c")];
+    expect(ids(moveItem(items, "a", "b1"))).toEqual(["b", "b1", "a", "c"]);
+    expect(ids(moveItem(items, "c", "b1"))).toEqual(["a", "c", "b", "b1"]);
+  });
+
+  it("moves a child alone, into another parent", () => {
+    const items = [item("a"), nested("a1"), item("b"), nested("b1")];
+    expect(ids(moveItem(items, "a1", "b1"))).toEqual(["a", "b", "b1", "a1"]);
+  });
+
+  it("keeps the first item top-level", () => {
+    const items = [item("a"), nested("a1")];
+    const moved = moveItem(items, "a1", "a");
+    expect(ids(moved)).toEqual(["a1", "a"]);
+    expect(moved[0].indented).toBe(false);
+  });
+
+  it("leaves the list alone when dropped on itself or its own child", () => {
+    const items = [item("a"), nested("a1"), item("b")];
+    expect(moveItem(items, "a", "a")).toBe(items);
+    expect(moveItem(items, "a", "a1")).toBe(items);
+    expect(moveItem(items, "a", "missing")).toBe(items);
   });
 });

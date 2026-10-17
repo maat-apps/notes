@@ -121,6 +121,45 @@ describe("deleteNote / setPinned", () => {
   });
 });
 
+describe("deleteNotes / setPinnedNotes", () => {
+  it("deletes several notes in one write", async () => {
+    const storage = await freshStorage();
+    for (const id of ["a", "b", "c"]) storage.saveNote(note({ id }), NOW);
+    const listener = vi.fn();
+    storage.subscribe(listener);
+
+    storage.deleteNotes(["a", "c", "missing"]);
+
+    expect(storage.getNotesSnapshot()).toEqual([note({ id: "b" })]);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("does nothing when none of the ids exist", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note(), NOW);
+    const listener = vi.fn();
+    storage.subscribe(listener);
+
+    storage.deleteNotes(["missing"]);
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("pins and unpins several notes, leaving the rest", async () => {
+    const storage = await freshStorage();
+    for (const id of ["a", "b", "c"]) storage.saveNote(note({ id }), NOW);
+
+    storage.setPinnedNotes(["a", "b"], true);
+    storage.setPinnedNotes(["b"], false);
+
+    expect(storage.getNotesSnapshot()).toEqual([
+      note({ id: "a", pinned: true }),
+      note({ id: "b" }),
+      note({ id: "c" }),
+    ]);
+  });
+});
+
 describe("loading", () => {
   it("drops malformed stored notes", async () => {
     vi.resetModules();
@@ -228,5 +267,40 @@ describe("edge cases", () => {
     storage.saveNote(note());
 
     expect(storage.getNotesSnapshot()).toHaveLength(1);
+  });
+});
+
+describe("setNoteOrder", () => {
+  it("ranks the notes in the given order", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.saveNote(note({ id: "b" }));
+
+    storage.setNoteOrder(["b", "a"]);
+
+    const ranks = Object.fromEntries(
+      storage.getNotesSnapshot().map((item) => [item.id, item.rank]),
+    );
+    expect(ranks).toEqual({ b: 0, a: 1 });
+  });
+
+  it("sends an edited note back to the top by dropping its rank", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.setNoteOrder(["a"]);
+
+    storage.saveNote(note({ id: "a", title: "Renamed", rank: 0 }));
+
+    expect(storage.getNotesSnapshot()[0].rank).toBeUndefined();
+  });
+
+  it("keeps the order when a note is pinned", async () => {
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "a" }));
+    storage.setNoteOrder(["a"]);
+
+    storage.setPinned("a", true);
+
+    expect(storage.getNotesSnapshot()[0].rank).toBe(0);
   });
 });

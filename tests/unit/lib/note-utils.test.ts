@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  convertNote,
   createNote,
+  duplicateNote,
   groupNotes,
   isEmptyNote,
   mergeNotes,
@@ -106,5 +108,136 @@ describe("mergeNotes", () => {
   it("keeps the current copy on a tie", () => {
     const twin = { ...older, title: "Twin" };
     expect(mergeNotes([older], [twin])).toEqual([older]);
+  });
+});
+
+describe("groupNotes order", () => {
+  const at = (id: string, updatedAt: string, rank?: number) =>
+    textNote({ id, updatedAt, rank });
+  const ids = (notes: Note[]) => notes.map((note) => note.id);
+
+  it("lists never-dragged notes most recently edited first", () => {
+    const { others } = groupNotes([
+      at("old", "2026-10-01T08:00:00.000Z"),
+      at("new", "2026-10-01T09:00:00.000Z"),
+    ]);
+    expect(ids(others)).toEqual(["new", "old"]);
+  });
+
+  it("lists dragged notes by rank, whatever their age", () => {
+    const { others } = groupNotes([
+      at("a", "2026-10-01T09:00:00.000Z", 1),
+      at("b", "2026-10-01T08:00:00.000Z", 0),
+    ]);
+    expect(ids(others)).toEqual(["b", "a"]);
+  });
+
+  it("puts notes without a rank above the dragged ones, in any input order", () => {
+    const fresh = at("fresh", "2026-10-01T07:00:00.000Z");
+    const ranked = at("ranked", "2026-10-01T09:00:00.000Z", 0);
+    expect(ids(groupNotes([fresh, ranked]).others)).toEqual([
+      "fresh",
+      "ranked",
+    ]);
+    expect(ids(groupNotes([ranked, fresh]).others)).toEqual([
+      "fresh",
+      "ranked",
+    ]);
+  });
+
+  it("puts notes without a rank above the dragged ones", () => {
+    const { others } = groupNotes([
+      at("ranked", "2026-10-01T09:00:00.000Z", 0),
+      at("fresh", "2026-10-01T07:00:00.000Z"),
+    ]);
+    expect(ids(others)).toEqual(["fresh", "ranked"]);
+  });
+});
+
+describe("duplicateNote", () => {
+  it("copies the content into a new, unpinned note", () => {
+    const original = textNote({
+      title: "Ideas",
+      body: "x",
+      pinned: true,
+      rank: 3,
+    } as Partial<Note>);
+    const later = new Date("2026-10-02T10:00:00.000Z");
+
+    const copy = duplicateNote(original, later);
+
+    expect(copy).toMatchObject({
+      type: "text",
+      title: "Ideas",
+      body: "x",
+      pinned: false,
+      rank: undefined,
+    });
+    expect(copy.id).not.toBe(original.id);
+    expect(copy.updatedAt).toBe(later.toISOString());
+  });
+});
+
+describe("convertNote", () => {
+  const checklist = (items: [string, boolean?, boolean?][]): Note => ({
+    ...createNote("checklist", NOW),
+    title: "T",
+    pinned: true,
+    items: items.map(([text, checked = false, indented = false], index) => ({
+      id: `i${index}`,
+      text,
+      checked,
+      indented,
+    })),
+  });
+
+  it("turns checklist items into lines, nested ones indented", () => {
+    const converted = convertNote(
+      checklist([["Milk"], ["Whole", true, true], ["Bread"]]),
+    );
+    expect(converted).toMatchObject({
+      type: "text",
+      title: "T",
+      pinned: true,
+      body: "Milk\n  Whole\nBread",
+    });
+  });
+
+  it("skips empty items going to text", () => {
+    const converted = convertNote(checklist([["Milk"], [""], ["  "]]));
+    expect(converted).toMatchObject({ body: "Milk" });
+  });
+
+  it("turns lines into checklist items, indented lines nested", () => {
+    const converted = convertNote(
+      textNote({ body: "Milk\n  Whole\n\nBread" } as Partial<Note>),
+    );
+    expect(converted.type).toBe("checklist");
+    const items = (converted as Extract<Note, { type: "checklist" }>).items;
+    expect(items.map((item) => [item.text, item.indented])).toEqual([
+      ["Milk", false],
+      ["Whole", true],
+      ["Bread", false],
+    ]);
+  });
+
+  it("never nests the first item", () => {
+    const converted = convertNote(
+      textNote({ body: "  Indented first" } as Partial<Note>),
+    );
+    const items = (converted as Extract<Note, { type: "checklist" }>).items;
+    expect(items[0].indented).toBe(false);
+  });
+
+  it("gives an empty text note one empty item to type into", () => {
+    const converted = convertNote(textNote());
+    expect(
+      (converted as Extract<Note, { type: "checklist" }>).items,
+    ).toHaveLength(1);
+  });
+
+  it("keeps the id, so the stored note is replaced", () => {
+    const original = textNote({ body: "a" } as Partial<Note>);
+    expect(convertNote(original).id).toBe(original.id);
   });
 });

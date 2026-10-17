@@ -1,9 +1,10 @@
+import { lockData } from "@maat-apps/core/local";
 import { createAppLock } from "@maat-apps/core/lock";
 
-import { setLockEnrolment } from "./app-settings";
-import { discardUpdateSnapshot } from "./app-update";
+import { relockAfterMs, setLockEnrolment } from "./app-settings";
+import { backups } from "./backup";
 import { encryptionKey } from "./encryption-key";
-import { getNotesSnapshot, replaceAllNotes } from "./storage";
+import { notesStore } from "./storage";
 
 // NEVER change this once the app has users: it's part of how their data is
 // encrypted, so a different value makes every encrypted record unreadable.
@@ -16,12 +17,7 @@ export const appLock = createAppLock({
   name: "Notes",
   keyInfo: HKDF_INFO,
   keyHolder: encryptionKey,
+  relockAfterMs,
   saveEnrolment: setLockEnrolment,
-  data: {
-    rewrite: () => replaceAllNotes(getNotesSnapshot()),
-    erase: async () => {
-      replaceAllNotes([]);
-      await discardUpdateSnapshot();
-    },
-  },
+  data: lockData(notesStore, backups.lockPart),
 });

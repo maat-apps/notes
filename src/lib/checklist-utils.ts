@@ -150,3 +150,47 @@ export function shownIndented(
       .map((item) => item.id),
   );
 }
+
+/** An item with the children that travel with it when it is moved. */
+function groupIds(items: ChecklistItem[], id: string): string[] {
+  return [id, ...childIds(items, id)];
+}
+
+/**
+ * Moves `id` to where `overId` is, the way a dragged row lands on the row
+ * it was dropped over: below it when dragged down, above it when dragged
+ * up. A top-level item takes its children along and lands beside `overId`'s
+ * whole group, so it never splits a parent from its children; an indented
+ * item moves alone and joins whichever parent ends up above it.
+ */
+export function moveItem(
+  items: ChecklistItem[],
+  id: string,
+  overId: string,
+): ChecklistItem[] {
+  const from = items.findIndex((item) => item.id === id);
+  const to = items.findIndex((item) => item.id === overId);
+  if (from === -1 || to === -1 || from === to) return items;
+
+  const moving = new Set(groupIds(items, id));
+  if (moving.has(overId)) return items;
+
+  const overItem = items[to];
+  const anchorGroup = items[from].indented
+    ? [overId]
+    : groupIds(
+        items,
+        overItem.indented ? (parentId(items, overId) ?? overId) : overId,
+      );
+  const movingItems = items.filter((item) => moving.has(item.id));
+  const rest = items.filter((item) => !moving.has(item.id));
+  const draggedDown = from < to;
+  const anchor = draggedDown ? anchorGroup.at(-1) : anchorGroup[0];
+  const anchorIndex = rest.findIndex((item) => item.id === anchor);
+  const insertAt = draggedDown ? anchorIndex + 1 : anchorIndex;
+  return withTopLevelFirst([
+    ...rest.slice(0, insertAt),
+    ...movingItems,
+    ...rest.slice(insertAt),
+  ]);
+}
