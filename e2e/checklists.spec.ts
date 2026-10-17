@@ -111,13 +111,16 @@ test("Backspace on an empty nested item un-nests it first", async ({
   await page.keyboard.type("Milk");
   await dragItemHandle(page, "Milk", { x: 60 });
   const unchecked = page.getByRole("list", { name: "List items" });
-  await unchecked.getByRole("textbox").nth(1).click();
+  const items = unchecked.getByRole("textbox");
+  const nested = unchecked.getByRole("listitem", { level: 2 });
+  // The drop lands a moment after the mouse lets go (slower on WebKit);
+  // typing before it would add an item at the top level.
+  await expect(nested).toHaveCount(1);
+  await items.nth(1).click();
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await page.keyboard.press("Backspace");
 
-  const items = unchecked.getByRole("textbox");
-  const nested = unchecked.getByRole("listitem", { level: 2 });
   await expect(items).toHaveCount(3);
   await expect(nested).toHaveCount(1);
   await page.keyboard.press("Backspace");
