@@ -4,6 +4,7 @@ import { createTextNote, goHome } from "./utils";
 
 async function newTextNote(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "New note" }).click();
+  await page.getByRole("button", { name: "Text note" }).click();
   await expect(page.getByRole("textbox", { name: "Note" })).toBeFocused();
 }
 
