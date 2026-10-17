@@ -159,7 +159,7 @@ export function HomeView() {
 
   /** Navigates within a view transition, once the note's screen is there. */
   function openWithTransition(path: string) {
-    withViewTransition(async () => {
+    void withViewTransition(async () => {
       flushSync(() => navigate(path));
       await untilRendered("[data-note-editor]");
     });
@@ -198,7 +198,7 @@ export function HomeView() {
   function deleteSelected() {
     setConfirmDelete(false);
     // The cards left behind slide up into the gap.
-    withViewTransition(() =>
+    void withViewTransition(() =>
       flushSync(() => {
         deleteNotes([...selectedIds]);
         clearSelection();

@@ -90,6 +90,7 @@ function ItemRow({
   focused,
   rowRef,
   rowStyle,
+  transitionName,
   dragging = false,
   dragHandle,
   inputRef,
@@ -110,6 +111,13 @@ function ItemRow({
   focused: boolean;
   rowRef?: (element: HTMLLIElement | null) => void;
   rowStyle?: CSSProperties;
+  /**
+   * Set only while checking animates, so the item slides to "Checked
+   * items" (or back) as one view transition. A name at all times makes each
+   * row its own layer, which WebKit's drag (nesting by the handle) trips
+   * over.
+   */
+  transitionName?: string;
   dragging?: boolean;
   /** The grip that drags the row; unchecked items only. */
   dragHandle?: ReactNode;
@@ -155,9 +163,7 @@ function ItemRow({
   return (
     <li
       ref={rowRef}
-      // Named, so checking an item slides it down to "Checked items" (and
-      // unchecking slides it back up) as one view transition.
-      style={{ ...rowStyle, viewTransitionName: itemTransitionName(item.id) }}
+      style={{ ...rowStyle, viewTransitionName: transitionName }}
       aria-level={indented ? 2 : 1}
       className={`bg-background flex items-start gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
     >
@@ -276,6 +282,7 @@ export function ChecklistFields({
     autoFocus ? (note.items[0]?.id ?? null) : null,
   );
   const [checkedOpen, setCheckedOpen] = useState(true);
+  const [animating, setAnimating] = useState(false);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const { unchecked, checked } = splitItems(note.items);
   const indented = new Set([
@@ -328,6 +335,7 @@ export function ChecklistFields({
         indented={indented.has(item.id)}
         canNest={canIndent(note.items, item.id)}
         focused={item.id === focusedId}
+        transitionName={animating ? itemTransitionName(item.id) : undefined}
         onFocusChange={(focused) => {
           if (focused) setFocusedId(item.id);
           else
@@ -341,13 +349,14 @@ export function ChecklistFields({
           else inputs.current.delete(item.id);
         }}
         onText={(text) => setItems(updateItem(note.items, item.id, { text }))}
-        onChecked={(isChecked) =>
-          withViewTransition(() =>
+        onChecked={(isChecked) => {
+          flushSync(() => setAnimating(true));
+          void withViewTransition(() =>
             flushSync(() =>
               setItems(setChecked(note.items, item.id, isChecked)),
             ),
-          )
-        }
+          ).finally(() => setAnimating(false));
+        }}
         onEnter={() => addItemAfter(item.id)}
         onBackspaceEmpty={() => {
           if (item.indented) {

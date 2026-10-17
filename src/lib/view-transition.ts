@@ -12,13 +12,19 @@ function reducedMotion(): boolean {
   );
 }
 
-/** Runs `update` (it must change the DOM synchronously, or resolve once it has) as a view transition. */
-export function withViewTransition(update: () => void | Promise<void>): void {
+/**
+ * Runs `update` (it must change the DOM synchronously, or resolve once it
+ * has) as a view transition. Resolves once the transition has finished, or
+ * straight after the update without one.
+ */
+export async function withViewTransition(
+  update: () => void | Promise<void>,
+): Promise<void> {
   if (typeof document.startViewTransition !== "function" || reducedMotion()) {
-    void update();
+    await update();
     return;
   }
-  document.startViewTransition(update);
+  await document.startViewTransition(update).finished.catch(() => undefined);
 }
 
 /** The `view-transition-name` a note's card and its open note share. */

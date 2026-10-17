@@ -22,31 +22,41 @@ function stubMotion(reduce: boolean) {
 }
 
 describe("withViewTransition", () => {
-  it("just runs the update without the API", () => {
+  it("just runs the update without the API", async () => {
     const update = vi.fn();
-    withViewTransition(update);
+    await withViewTransition(update);
     expect(update).toHaveBeenCalledOnce();
   });
 
-  it("runs the update as a view transition", () => {
+  it("runs the update as a view transition and resolves once it's done", async () => {
     stubMotion(false);
-    const start = vi.fn();
+    const start = vi.fn(() => ({ finished: Promise.resolve() }));
     Object.assign(document, { startViewTransition: start });
     const update = vi.fn();
 
-    withViewTransition(update);
+    await withViewTransition(update);
 
     expect(start).toHaveBeenCalledWith(update);
-    expect(update).not.toHaveBeenCalled();
   });
 
-  it("skips the transition for reduced motion", () => {
+  it("resolves even when the transition is skipped", async () => {
+    stubMotion(false);
+    Object.assign(document, {
+      startViewTransition: () => ({
+        finished: Promise.reject(new Error("skipped")),
+      }),
+    });
+
+    await expect(withViewTransition(vi.fn())).resolves.toBeUndefined();
+  });
+
+  it("skips the transition for reduced motion", async () => {
     stubMotion(true);
     const start = vi.fn();
     Object.assign(document, { startViewTransition: start });
     const update = vi.fn();
 
-    withViewTransition(update);
+    await withViewTransition(update);
 
     expect(start).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledOnce();
