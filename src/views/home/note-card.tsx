@@ -44,7 +44,8 @@ function ChecklistPreview({
 }
 
 /**
- * One note in the list, as in Keep: an outlined card (no filled surface)
+ * One note in the list, as in Keep: an outlined card on the page's own
+ * background — opaque, so a card dragged over another hides it —
  * with its title (if any) and a clipped preview of its content. A selected
  * card gets a bold outline and settles in slightly.
  */
@@ -60,7 +61,7 @@ export function NoteCard({
   return (
     <ListRow
       onClick={onClick}
-      className={`min-h-0 items-start bg-transparent px-4 py-3 transition-[transform,box-shadow,border-color] duration-150 ease-out motion-reduce:transition-none ${selected ? "border-foreground ring-foreground scale-[0.98] ring-2" : ""}`}
+      className={`bg-background min-h-0 items-start px-4 py-3 transition-[transform,box-shadow,border-color] duration-150 ease-out motion-reduce:transition-none ${selected ? "border-foreground ring-foreground scale-[0.98] ring-2" : ""}`}
     >
       <div className="grid min-w-0 flex-1 gap-2 text-left text-sm leading-5">
         {note.title && (
