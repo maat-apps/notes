@@ -97,5 +97,6 @@
   "importTitle": "Dodać notatki z kopii?",
   "importDescription": "Notatki, których brakuje na tym urządzeniu, zostaną dodane. Notatka obecna w obu miejscach zachowa nowszą wersję. Nic nie jest usuwane.",
   "importConfirm": "Importuj",
-  "importDone": "Notatki zaimportowane."
+  "importDone": "Notatki zaimportowane.",
+  "done": "Gotowe"
 }

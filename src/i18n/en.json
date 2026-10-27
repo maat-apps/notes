@@ -97,5 +97,6 @@
   "importTitle": "Add notes from the backup?",
   "importDescription": "Notes missing from this device are added. A note that is in both keeps its newer version. Nothing is deleted.",
   "importConfirm": "Import",
-  "importDone": "Notes imported."
+  "importDone": "Notes imported.",
+  "done": "Done"
 }

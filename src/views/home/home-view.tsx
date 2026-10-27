@@ -26,6 +26,7 @@ import { Button } from "@maat-apps/ui/button";
 import { ConfirmDrawer } from "@maat-apps/ui/confirm-drawer";
 import { EmptyState } from "@maat-apps/ui/empty-state";
 import { PageHeader, PageTitle, SectionTitle } from "@maat-apps/ui/page-header";
+import { SettingsDrawer } from "@maat-apps/ui/settings-sections";
 import { reorderIds } from "@maat-apps/ui/sortable-list";
 import { useNotes } from "../../hooks/use-notes";
 import { useTranslation } from "../../i18n/use-translation";
@@ -37,11 +38,12 @@ import {
   untilRendered,
   withViewTransition,
 } from "../../lib/view-transition";
-import { SettingsDrawer } from "../settings/settings-drawer";
+import { SettingsPanel } from "../settings/settings-panel";
 
 import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 import { SelectionBar } from "./selection-bar";
+import { SharedBackupImport } from "./shared-backup-import";
 
 // A long press lifts a card: dragged, it moves the card; let go where it was
 // picked up, it selects (or deselects) the card instead.
@@ -283,7 +285,14 @@ export function HomeView() {
         confirmLabel={t("delete")}
         onConfirm={deleteSelected}
       />
-      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SharedBackupImport />
+      <SettingsDrawer
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        title={t("settings")}
+      >
+        <SettingsPanel />
+      </SettingsDrawer>
     </div>
   );
 }
