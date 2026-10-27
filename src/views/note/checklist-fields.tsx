@@ -58,7 +58,7 @@ import {
   withViewTransition,
 } from "../../lib/view-transition";
 
-/** How far a row is drawn in when nested — `pl-9`. */
+/** How far a nested row, grip included, is drawn in — `pl-9`. */
 const INDENT_WIDTH = 36;
 
 // A row dragged sideways shows where it would land, but no further than one
@@ -165,57 +165,61 @@ function ItemRow({
       ref={rowRef}
       style={{ ...rowStyle, viewTransitionName: transitionName }}
       aria-level={indented ? 2 : 1}
-      className={`bg-background flex items-start gap-1 ${dragging ? "relative z-10 shadow-lg" : ""}`}
+      className={`bg-background flex items-start ${indented ? "pl-9" : ""} ${dragging ? "relative z-10 shadow-lg" : ""}`}
     >
-      <span className="flex h-12 w-10 shrink-0 items-center justify-center">
+      {/* Each control sits in a box as tall as the text's first line, so
+          grip, checkbox, text and buttons share one axis, and a wrapped
+          item keeps them by its first line. */}
+      <span className="flex h-12 w-8 shrink-0 items-center justify-center">
         {dragHandle}
       </span>
-      <div
-        className={`flex min-w-0 flex-1 items-start gap-3 ${indented ? "pl-9" : ""}`}
-      >
+      <span className="mr-2 flex h-12 w-6 shrink-0 items-center justify-center">
         <Checkbox
-          className="mt-[15px]"
           checked={item.checked}
           aria-label={t("itemDone", { item: label })}
           onCheckedChange={(checked) => onChecked(checked === true)}
         />
-        <textarea
-          ref={(element) => {
-            textArea.current = element;
-            inputRef(element);
-          }}
-          rows={1}
-          value={item.text}
-          aria-label={t("listItem")}
-          placeholder={t("listItem")}
-          className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-3 text-base wrap-break-word outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
-          enterKeyHint="next"
-          // An item is one line of text however it wraps: pasted line
-          // breaks become spaces.
-          onChange={(event) =>
-            onText(event.target.value.replace(/[\r\n]+/g, " "))
-          }
-          onKeyDown={handleKeyDown}
-          onFocus={() => onFocusChange(true)}
-          onBlur={() => onFocusChange(false)}
-        />
-        {link && (
+      </span>
+      <textarea
+        ref={(element) => {
+          textArea.current = element;
+          inputRef(element);
+        }}
+        rows={1}
+        value={item.text}
+        aria-label={t("listItem")}
+        placeholder={t("listItem")}
+        className={`placeholder:text-muted-foreground w-0 min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-3 text-base leading-6 wrap-break-word outline-none ${item.checked ? "text-muted-foreground line-through" : ""}`}
+        enterKeyHint="next"
+        // An item is one line of text however it wraps: pasted line
+        // breaks become spaces.
+        onChange={(event) =>
+          onText(event.target.value.replace(/[\r\n]+/g, " "))
+        }
+        onKeyDown={handleKeyDown}
+        onFocus={() => onFocusChange(true)}
+        onBlur={() => onFocusChange(false)}
+      />
+      {link && (
+        <span className="flex h-12 shrink-0 items-center">
           <a
             href={link}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("openLink", { link: linkLabel(link) })}
-            className="hover:bg-muted active:bg-muted mt-1 flex size-10 shrink-0 items-center justify-center rounded-full"
+            className="hover:bg-muted active:bg-muted flex size-10 items-center justify-center rounded-full"
           >
             <ArrowSquareOut aria-hidden="true" className="size-5" />
           </a>
-        )}
-        {/* Always laid out, only hidden while unfocused, so focusing an
-            item doesn't narrow its text and rewrap it. */}
+        </span>
+      )}
+      {/* Always laid out, only hidden while unfocused, so focusing an
+          item doesn't narrow its text and rewrap it. */}
+      <span className="flex h-12 shrink-0 items-center">
         <Button
           variant="ghost"
           size="icon"
-          className={`mt-1 ${focused ? "" : "invisible"}`}
+          className={focused ? "" : "invisible"}
           aria-label={t("removeItem", { item: label })}
           onMouseDown={keepFocus}
           onPointerDown={keepFocus}
@@ -223,7 +227,7 @@ function ItemRow({
         >
           <X className="size-6" />
         </Button>
-      </div>
+      </span>
     </li>
   );
 }
@@ -247,7 +251,7 @@ function SortableItemRow(props: Parameters<typeof ItemRow>[0]) {
         <button
           type="button"
           ref={sortable.setActivatorNodeRef}
-          className="text-foreground flex size-10 touch-none items-center justify-center rounded-full outline-none focus-visible:ring-3"
+          className="text-foreground flex h-10 w-8 touch-none items-center justify-center rounded-full outline-none focus-visible:ring-3"
           aria-label={t("dragItem", { item: label })}
           {...sortable.attributes}
           {...sortable.listeners}
@@ -401,7 +405,7 @@ export function ChecklistFields({
       </DndContext>
       <Button
         variant="ghost"
-        className="h-12 justify-start gap-3 pl-11 text-base font-normal"
+        className="h-12 justify-start gap-2 pl-8 text-base font-normal"
         onClick={() => addItemAfter(unchecked.at(-1)?.id ?? null)}
       >
         <Plus aria-hidden="true" className="size-6" /> {t("addItem")}

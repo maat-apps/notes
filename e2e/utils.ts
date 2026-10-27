@@ -73,15 +73,21 @@ export async function dragItemHandle(
   item: string,
   { x = 0, y = 0 }: { x?: number; y?: number },
 ) {
-  const handle = await page
-    .getByRole("button", { name: `Reorder ${item}` })
-    .boundingBox();
+  const grip = page.getByRole("button", { name: `Reorder ${item}` });
+  const handle = await grip.boundingBox();
   if (!handle) throw new Error("the row is not laid out");
   const startX = handle.x + handle.width / 2;
   const startY = handle.y + handle.height / 2;
   await page.mouse.move(startX, startY);
   await page.mouse.down();
-  await page.mouse.move(startX + Math.sign(x) * 5, startY, { steps: 2 });
+  await page.mouse.move(startX + Math.sign(x) * 5, startY + Math.sign(y) * 5, {
+    steps: 2,
+  });
+  // Moves before the row has lifted are lost (WebKit is slow to start the
+  // drag): the drop would land where it began.
+  await expect(page.getByRole("listitem").filter({ has: grip })).toHaveClass(
+    /shadow-lg/,
+  );
   await page.mouse.move(startX + x, startY + y, { steps: 10 });
   await page.mouse.up();
   // dnd-kit keeps swallowing clicks for 50ms after a drag ends.
