@@ -50,8 +50,7 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   note mutations, read through `src/hooks/use-notes.ts`. Notes are
   validated per entry (`schemas.ts`); a note with no title and no content
   is never kept (`note-utils.ts`'s `isEmptyNote`). Backups and the
-  pre-update snapshot are core's `createLocalBackup` (`backup.ts`,
-  re-exported by `app-update.ts`); `app-lock.ts` wires both through
+  pre-update snapshot are core's `createLocalBackup` (`backup.ts`); `app-lock.ts` wires both through
   `lockData`. A Settings import merges (`mergeBackup`, `note-utils.ts`'s
   `mergeNotes`: adds missing notes, the newer `updatedAt` wins, nothing is
   deleted); only the pre-update snapshot restore (`applyBackup`) replaces.
@@ -79,7 +78,12 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   delete. Opening a note therefore changes the URL a frame after the tap —
   e2e waits for the editor, not the click.
   Back uses `useSmartBack("/")`. Settings is a drawer
-  (`views/settings/`), one `settings-<name>-section.tsx` per card.
+  (`@maat-apps/ui/settings-sections`' `SettingsDrawer`):
+  `views/settings/settings-panel.tsx` puts ui's Language, Security, Data
+  and App sections together with notes' strings. A backup shared from
+  another app (`public/manifest.json`'s `share_target`, `sw.ts`'s
+  `shareTarget`, `lib/shared-backup.ts`) is offered by home's
+  `shared-backup-import.tsx`.
 - **i18n.** `src/i18n/en.json` and `pl.json` (core's `createTranslation`;
   the device language picks on first launch, Settings → Language after).
   `t()` only accepts keys present in both — keep them in sync.
@@ -89,9 +93,9 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   `@maat-apps/ui/app-lock-gate`, wrapped around the router in
   `src/app/router.tsx`). `src/lib/app-lock.ts` rewrites the notes with the
   current key and erases them plus the update snapshot; `storage.ts` and
-  `app-update.ts` encrypt with `src/lib/encryption-key.ts`. The lock comes back after
-  time in the background per `app-settings.ts`'s `relockAfter` (Settings →
-  Security; `relockAfterMs` feeds `createAppLock`). **Never change
+  the update snapshot encrypt with `src/lib/encryption-key.ts`. The lock comes back after
+  time in the background per `app-settings.ts`'s `relockAfter` (core's
+  `createAppSettings`; Settings → Security; `relockAfterMs` feeds `createAppLock`). **Never change
   `HKDF_INFO` (`"notes-data-v1"`)** — existing encrypted notes would
   become unreadable.
 - Full pattern log: none yet — run `/learn-patterns` after a non-trivial
