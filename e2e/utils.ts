@@ -1,6 +1,7 @@
 // Reusable Playwright test helpers — plain functions specs call directly,
 // not test.extend() fixtures (hence "utils.ts", not "fixtures.ts" — see
 // maat-core/STRUCTURE.md's Testing section for why that naming matters).
+import { readStored } from "@maat-apps/config/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function goHome(page: Page) {
@@ -101,28 +102,11 @@ export async function dragItemHandle(
  */
 export async function waitForStoredLock(page: Page) {
   await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          new Promise<boolean>((resolve) => {
-            const request = indexedDB.open("notes");
-            request.onerror = () => resolve(false);
-            request.onsuccess = () => {
-              const read = request.result
-                .transaction("kv")
-                .objectStore("kv")
-                .get("notes-settings");
-              read.onerror = () => resolve(false);
-              read.onsuccess = () =>
-                resolve(
-                  Boolean(
-                    (read.result as { lock?: unknown } | undefined)?.lock,
-                  ),
-                );
-            };
-          }),
-      ),
-    )
+    .poll(async () => {
+      const settings = (await readStored(page, "notes", "notes-settings")) as
+        { lock?: unknown } | undefined;
+      return Boolean(settings?.lock);
+    })
     .toBe(true);
 }
 
@@ -133,30 +117,13 @@ export async function waitForStoredLock(page: Page) {
  */
 export async function waitForStoredOrder(page: Page) {
   await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          new Promise<boolean>((resolve) => {
-            const request = indexedDB.open("notes");
-            request.onerror = () => resolve(false);
-            request.onsuccess = () => {
-              const read = request.result
-                .transaction("kv")
-                .objectStore("kv")
-                .get("notes-data");
-              read.onerror = () => resolve(false);
-              read.onsuccess = () => {
-                const notes =
-                  (read.result as { notes?: { rank?: number }[] } | undefined)
-                    ?.notes ?? [];
-                resolve(
-                  notes.length > 0 &&
-                    notes.every((note) => typeof note.rank === "number"),
-                );
-              };
-            };
-          }),
-      ),
-    )
+    .poll(async () => {
+      const data = (await readStored(page, "notes", "notes-data")) as
+        { notes?: { rank?: number }[] } | undefined;
+      const notes = data?.notes ?? [];
+      return (
+        notes.length > 0 && notes.every((note) => typeof note.rank === "number")
+      );
+    })
     .toBe(true);
 }
