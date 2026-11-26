@@ -54,3 +54,29 @@ describe("useNotesReady", () => {
     expect(storage.isNotesReadyOnServer()).toBe(false);
   });
 });
+
+describe("useUnreadableNotes", () => {
+  it("is null while the stored notes read normally", async () => {
+    const { useUnreadableNotes } = await freshHooks();
+    const { result } = renderHook(() => useUnreadableNotes());
+
+    expect(result.current).toBeNull();
+  });
+
+  it("reports encrypted notes it has no key for, moved aside", async () => {
+    vi.resetModules();
+    const { kvSet } = await import("@/lib/idb-store");
+    // Encrypted notes, but no lock enrolment to unlock them with.
+    await kvSet("notes-data", { iv: "AAAAAAAAAAAAAAAA", ciphertext: "AAAA" });
+    const { useUnreadableNotes } = await import("@/hooks/use-notes");
+    const storage = await import("@/lib/storage");
+    const { result } = renderHook(() => useUnreadableNotes());
+
+    await act(() => storage.whenLoaded());
+
+    expect(result.current).toEqual({
+      reason: "no-key",
+      movedTo: "notes-data-unreadable",
+    });
+  });
+});

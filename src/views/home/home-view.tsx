@@ -44,6 +44,7 @@ import { NewNoteMenu } from "./new-note-menu";
 import { NoteCard } from "./note-card";
 import { SelectionBar } from "./selection-bar";
 import { SharedBackupImport } from "./shared-backup-import";
+import { UnreadableNotesNotice } from "./unreadable-notes-notice";
 
 // A long press lifts a card: dragged, it moves the card; let go where it was
 // picked up, it selects (or deselects) the card instead.
@@ -228,6 +229,7 @@ export function HomeView() {
           <Gear className="size-6" />
         </Button>
       </PageHeader>
+      <UnreadableNotesNotice />
       {notes.length === 0 ? (
         <EmptyState
           title={t("emptyTitle")}

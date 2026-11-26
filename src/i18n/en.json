@@ -98,5 +98,8 @@
   "importDescription": "Notes missing from this device are added. A note that is in both keeps its newer version. Nothing is deleted.",
   "importConfirm": "Import",
   "importDone": "Notes imported.",
-  "done": "Done"
+  "done": "Done",
+  "unreadableNotesTitle": "Your saved notes couldn't be read",
+  "unreadableNotesMoved": "They were set aside untouched, so nothing overwrites them. New notes are saved as usual.",
+  "unreadableNotesKept": "To keep them intact, nothing you change now is saved. Close and reopen the app to try again."
 }
