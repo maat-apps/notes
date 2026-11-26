@@ -43,6 +43,13 @@ export const getServerNotesSnapshot = notesStore.getServerSnapshot;
 export const isNotesReady = notesStore.isReady;
 export const isNotesReadyOnServer = notesStore.isReadyOnServer;
 
+/**
+ * Set when the stored notes couldn't be read (lost lock settings, damaged
+ * data): they were moved aside untouched, or left in place with saving
+ * off for this session — never overwritten. Home tells the user.
+ */
+export const getUnreadableNotes = notesStore.getUnreadable;
+
 function writeNotes(next: Note[]): void {
   void notesStore.replace(next);
 }

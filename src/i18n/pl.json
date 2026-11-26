@@ -98,5 +98,8 @@
   "importDescription": "Notatki, których brakuje na tym urządzeniu, zostaną dodane. Notatka obecna w obu miejscach zachowa nowszą wersję. Nic nie jest usuwane.",
   "importConfirm": "Importuj",
   "importDone": "Notatki zaimportowane.",
-  "done": "Gotowe"
+  "done": "Gotowe",
+  "unreadableNotesTitle": "Nie udało się odczytać zapisanych notatek",
+  "unreadableNotesMoved": "Zostały odłożone bez zmian, więc nic ich nie nadpisze. Nowe notatki zapisują się normalnie.",
+  "unreadableNotesKept": "Żeby niczego nie nadpisać, zmiany nie są teraz zapisywane. Zamknij i otwórz aplikację, żeby spróbować ponownie."
 }
