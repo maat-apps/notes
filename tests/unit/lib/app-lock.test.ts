@@ -126,3 +126,35 @@ describe("data wiring", () => {
     expect(backups.snapshot.has()).toBe(false);
   });
 });
+
+describe("keyForSetAsideNotes", () => {
+  it("prompts for the lock the notes were put away under", async () => {
+    const { appLock } = await freshModules();
+    const { keyForSetAsideNotes } = await import("@/lib/app-lock");
+    const key = {} as CryptoKey;
+    const deriveKeyWith = vi
+      .spyOn(appLock, "deriveKeyWith")
+      .mockResolvedValue(key);
+    const lock = {
+      credentialId: "old",
+      userId: "u",
+      encryptionSupported: true,
+    };
+
+    await expect(keyForSetAsideNotes(lock)).resolves.toBe(key);
+
+    expect(deriveKeyWith).toHaveBeenCalledWith(
+      expect.objectContaining({ credentialId: "old" }),
+    );
+  });
+
+  it("uses the current key for notes set aside without a lock", async () => {
+    await freshModules();
+    const { keyForSetAsideNotes } = await import("@/lib/app-lock");
+    const { encryptionKey } = await import("@/lib/encryption-key");
+    const key = {} as CryptoKey;
+    encryptionKey.set(key);
+
+    await expect(keyForSetAsideNotes(null)).resolves.toBe(key);
+  });
+});

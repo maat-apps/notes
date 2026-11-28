@@ -24,6 +24,11 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         eraseDataWarningDescription: t("eraseDataWarningDescription"),
         eraseDataConfirm: t("eraseDataConfirm"),
         eraseDataCancel: t("eraseDataCancel"),
+        setAside: {
+          title: t("setAsideWarningTitle"),
+          description: t("setAsideWarningDescription"),
+          confirm: t("setAsideConfirm"),
+        },
       }}
     >
       {children}

@@ -112,5 +112,15 @@
   "backupPasswordRepeat": "Powtórz hasło",
   "backupPasswordTooShort": "Użyj co najmniej 8 znaków.",
   "backupPasswordMismatch": "Hasła się nie zgadzają.",
-  "backupPasswordWrong": "Złe hasło albo uszkodzony plik."
+  "backupPasswordWrong": "Złe hasło albo uszkodzony plik.",
+  "setAsideWarningTitle": "Twoje notatki zostaną odłożone",
+  "setAsideWarningDescription": "Twoje notatki są zaszyfrowane i otworzy je tylko działające odblokowanie odciskiem palca. Wyłączenie blokady teraz odłoży je, nadal zaszyfrowane, a aplikacja zacznie od zera. Jeśli ten odcisk znów zadziała, przywrócisz je w Ustawieniach.",
+  "setAsideConfirm": "Odłóż i kontynuuj",
+  "setAsideNotes": "Odłożone notatki",
+  "setAsideNotesDescription": "Zaszyfrowane notatki odłożone przy wyłączeniu blokady ({count}). Otwórz je odciskiem, którym je zapisano.",
+  "setAsideNotesAction": "Otwórz",
+  "setAsideNotesRecovered": "Notatki przywrócone.",
+  "setAsideNotesFailed": "Nie udało się ich otworzyć. Użyj odcisku, którym je zapisano.",
+  "lastBackup": "Ostatnia kopia: {age}.",
+  "noBackupYet": "Nie masz jeszcze kopii. Jeśli odcisk przestanie działać, tylko kopia pozwoli odzyskać notatki."
 }

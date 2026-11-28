@@ -9,7 +9,17 @@ import { SETTINGS_KEY } from "./storage-keys";
 export const appSettings = createAppSettings({
   storage: keyValueStore,
   key: SETTINGS_KEY,
+  extra: {
+    defaults: { lastBackupAt: null as string | null },
+    parse: (stored) => ({ lastBackupAt: parseBackupTime(stored.lastBackupAt) }),
+  },
 });
+
+function parseBackupTime(value: unknown): string | null {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value))
+    ? value
+    : null;
+}
 
 export type AppSettings = ReturnType<typeof appSettings.getSnapshot>;
 
@@ -27,3 +37,8 @@ export const setLockEnrolment = appSettings.setLockEnrolment;
 export const setRelockAfter = appSettings.setRelockAfter;
 export const relockAfterMs = appSettings.relockAfterMs;
 export const markInstalled = appSettings.markInstalled;
+
+/** Remembers that a backup was just shared or downloaded. */
+export function markBackedUp(now = new Date()): void {
+  appSettings.set({ lastBackupAt: now.toISOString() });
+}

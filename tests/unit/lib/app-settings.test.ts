@@ -152,3 +152,38 @@ describe("relockAfterMs", () => {
     expect(appSettings.relockAfterMs()).toBe(0);
   });
 });
+
+describe("lastBackupAt / markBackedUp", () => {
+  it("starts with no backup", async () => {
+    const appSettings = await freshAppSettings();
+    await appSettings.whenLoaded();
+
+    expect(appSettings.getSettingsSnapshot().lastBackupAt).toBeNull();
+  });
+
+  it("remembers when a backup was made, for the next session", async () => {
+    const appSettings = await freshAppSettings();
+    await appSettings.whenLoaded();
+
+    appSettings.markBackedUp(new Date("2026-11-20T08:00:00.000Z"));
+
+    const { kvGet } = await import("@/lib/idb-store");
+    const { SETTINGS_KEY } = await import("@/lib/storage-keys");
+    await vi.waitFor(async () =>
+      expect(await kvGet(SETTINGS_KEY)).toMatchObject({
+        lastBackupAt: "2026-11-20T08:00:00.000Z",
+      }),
+    );
+  });
+
+  it("reads a stored value that isn't a date as no backup", async () => {
+    vi.resetModules();
+    const { kvSet } = await import("@/lib/idb-store");
+    const { SETTINGS_KEY } = await import("@/lib/storage-keys");
+    await kvSet(SETTINGS_KEY, { lastBackupAt: "whenever" });
+    const appSettings = await freshAppSettings();
+    await appSettings.whenLoaded();
+
+    expect(appSettings.getSettingsSnapshot().lastBackupAt).toBeNull();
+  });
+});

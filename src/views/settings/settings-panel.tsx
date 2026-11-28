@@ -6,12 +6,16 @@ import {
   LanguageSection,
   SecuritySection,
 } from "@maat-apps/ui/settings-sections";
+import { useAppSettings } from "../../hooks/use-app-settings";
 import { useBackupPasswords } from "../../hooks/use-backup-passwords";
 import { useInstallPrompt } from "../../hooks/use-install-prompt";
 import { useTranslation } from "../../i18n/use-translation";
 import { appLock } from "../../lib/app-lock";
-import { appSettings } from "../../lib/app-settings";
+import { appSettings, markBackedUp } from "../../lib/app-settings";
 import { backups, mergeBackup } from "../../lib/backup";
+import { formatBackupAge } from "../../lib/backup-age";
+
+import { SetAsideNotesRow } from "./set-aside-notes-row";
 
 // Every section is @maat-apps/ui's, as in every app; the strings are notes'.
 export function SettingsPanel() {
@@ -19,6 +23,10 @@ export function SettingsPanel() {
   const install = useInstallPrompt();
   const passwords = useBackupPasswords();
   const [status, setStatus] = useState<string | null>(null);
+  const { lastBackupAt } = useAppSettings();
+  const backupAge = lastBackupAt
+    ? t("lastBackup", { age: formatBackupAge(lastBackupAt, locale) })
+    : t("noBackupYet");
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
@@ -50,11 +58,12 @@ export function SettingsPanel() {
         backups={backups}
         passwords={passwords}
         onImport={mergeBackup}
+        onExported={markBackedUp}
         onStatus={setStatus}
         labels={{
           title: t("sectionData"),
           exportData: t("exportData"),
-          exportDataDescription: t("exportDataDescription"),
+          exportDataDescription: `${t("exportDataDescription")} ${backupAge}`,
           exportAction: t("exportAction"),
           exportShared: t("exportShared"),
           exportDone: t("exportDone"),
@@ -68,7 +77,9 @@ export function SettingsPanel() {
           importDone: t("importDone"),
           cancel: t("cancel"),
         }}
-      />
+      >
+        <SetAsideNotesRow onStatus={setStatus} />
+      </DataSection>
       <AppSection
         install={install}
         updateApp={backups.updateApp}

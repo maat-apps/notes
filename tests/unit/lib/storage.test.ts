@@ -304,3 +304,58 @@ describe("setNoteOrder", () => {
     expect(storage.getNotesSnapshot()[0].rank).toBe(0);
   });
 });
+
+describe("recoverSetAsideNotes", () => {
+  async function putAway(value: unknown, lock: unknown = null) {
+    // The database was just reset, closing the last module's connection.
+    vi.resetModules();
+    const { kvSet } = await import("@/lib/idb-store");
+    await kvSet("notes-data-unreadable", { setAside: [{ value, lock }] });
+  }
+
+  it("merges notes that open into the ones here", async () => {
+    await putAway({ notes: [note({ id: "away", title: "Put away" })] });
+    const storage = await freshStorage();
+    storage.saveNote(note({ id: "here", title: "Here" }), NOW);
+    const keyFor = vi.fn(async () => null);
+
+    await expect(storage.recoverSetAsideNotes(keyFor)).resolves.toBe(1);
+
+    expect(
+      storage
+        .getNotesSnapshot()
+        .map((item) => item.id)
+        .sort(),
+    ).toEqual(["away", "here"]);
+    expect(storage.getSetAsideCount()).toBe(0);
+  });
+
+  it("opens encrypted notes with the key for their lock", async () => {
+    const { encryptJson } = await import("@maat-apps/core/crypto");
+    const key = await testKey();
+    const lock = { credentialId: "old" };
+    await putAway(await encryptJson(key, { notes: [note()] }), lock);
+    const storage = await freshStorage();
+    const keyFor = vi.fn(async () => key);
+
+    await expect(storage.recoverSetAsideNotes(keyFor)).resolves.toBe(1);
+
+    expect(keyFor).toHaveBeenCalledWith(lock);
+    expect(storage.getNotesSnapshot()).toEqual([
+      expect.objectContaining({ id: "n1" }),
+    ]);
+  });
+
+  it("changes nothing when they don't open", async () => {
+    const { encryptJson } = await import("@maat-apps/core/crypto");
+    await putAway(await encryptJson(await testKey(), { notes: [note()] }));
+    const storage = await freshStorage();
+
+    await expect(storage.recoverSetAsideNotes(async () => null)).resolves.toBe(
+      0,
+    );
+
+    expect(storage.getNotesSnapshot()).toEqual([]);
+    expect(storage.getSetAsideCount()).toBe(1);
+  });
+});

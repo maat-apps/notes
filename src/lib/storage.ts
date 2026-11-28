@@ -50,6 +50,23 @@ export const isNotesReadyOnServer = notesStore.isReadyOnServer;
  */
 export const getUnreadableNotes = notesStore.getUnreadable;
 
+/** How many sets of notes are put away (see `recoverSetAsideNotes`). */
+export const getSetAsideCount = notesStore.getSetAsideCount;
+
+/**
+ * Opens notes put away when the lock was turned off without its key (or
+ * set aside as unreadable), merging what opens into the notes here.
+ * `keyFor` gives the key for the lock they were encrypted under. Resolves
+ * how many sets came back.
+ */
+export async function recoverSetAsideNotes(
+  keyFor: (lock: unknown) => Promise<CryptoKey | null>,
+): Promise<number> {
+  const recovered = await notesStore.recoverSetAside(keyFor);
+  if (recovered.length > 0) mergeIntoNotes(recovered.flat());
+  return recovered.length;
+}
+
 function writeNotes(next: Note[]): void {
   void notesStore.replace(next);
 }

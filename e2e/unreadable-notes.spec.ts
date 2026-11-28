@@ -41,7 +41,7 @@ test("sets unreadable notes aside, says so, and keeps them through new edits", a
   await expect
     .poll(() => readStored(page, "notes", "notes-data"))
     .toMatchObject({ notes: [expect.objectContaining({ title: "After" })] });
-  expect(await readStored(page, "notes", "notes-data-unreadable")).toEqual(
-    ENCRYPTED_NOTES,
-  );
+  expect(
+    await readStored(page, "notes", "notes-data-unreadable"),
+  ).toMatchObject({ setAside: [{ value: ENCRYPTED_NOTES }] });
 });

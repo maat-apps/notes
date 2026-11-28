@@ -99,7 +99,19 @@ scope are in [`PRODUCT.md`](./PRODUCT.md).
   time in the background per `app-settings.ts`'s `relockAfter` (core's
   `createAppSettings`; Settings → Security; `relockAfterMs` feeds `createAppLock`). **Never change
   `HKDF_INFO` (`"notes-data-v1"`)** — existing encrypted notes would
-  become unreadable.
+  become unreadable. Nothing is erased when the lock is turned off without
+  its fingerprint: the gate's `labels.setAside` makes it core's
+  `disableAndSetAside`, which puts the encrypted notes under
+  `notes-data-unreadable` with that lock (as are notes a read couldn't
+  open — home's `unreadable-notes-notice.tsx` says so), and Settings →
+  Data's `set-aside-notes-row.tsx` opens them again
+  (`app-lock.ts`'s `keyForSetAsideNotes`, `storage.ts`'s
+  `recoverSetAsideNotes`, merged like an import). There's no backup
+  password for the lock, by the owner's choice; backups are
+  password-protected files (`hooks/use-backup-passwords.ts`), and Export
+  says when the last one was made (`app-settings.ts`'s `lastBackupAt`).
+  E2E fails a fingerprint with `e2e/utils.ts`'s
+  `installControllableFingerprint` (Chromium only).
 - Full pattern log: none yet — run `/learn-patterns` after a non-trivial
   session to start one.
 

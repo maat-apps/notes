@@ -1,5 +1,5 @@
 import { lockData } from "@maat-apps/core/local";
-import { createAppLock } from "@maat-apps/core/lock";
+import { createAppLock, parseLockEnrolment } from "@maat-apps/core/lock";
 
 import { relockAfterMs, setLockEnrolment } from "./app-settings";
 import { backups } from "./backup";
@@ -21,3 +21,14 @@ export const appLock = createAppLock({
   saveEnrolment: setLockEnrolment,
   data: lockData(notesStore, backups.lockPart),
 });
+
+/**
+ * The key that opens notes put away under `lock`: prompts for that lock's
+ * fingerprint; without a lock (notes set aside as unreadable), the current
+ * key.
+ */
+export function keyForSetAsideNotes(lock: unknown): Promise<CryptoKey | null> {
+  const enrolment = parseLockEnrolment(lock);
+  if (!enrolment) return Promise.resolve(encryptionKey.get());
+  return appLock.deriveKeyWith(enrolment);
+}
