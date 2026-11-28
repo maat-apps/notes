@@ -86,7 +86,7 @@
   "language": "Language",
   "sectionData": "Data",
   "exportData": "Export notes",
-  "exportDataDescription": "Save a backup file of all your notes.",
+  "exportDataDescription": "Save a password-protected file with all your notes.",
   "exportAction": "Export",
   "exportShared": "Backup shared.",
   "exportDone": "Backup downloaded.",
@@ -101,5 +101,16 @@
   "done": "Done",
   "unreadableNotesTitle": "Your saved notes couldn't be read",
   "unreadableNotesMoved": "They were set aside untouched, so nothing overwrites them. New notes are saved as usual.",
-  "unreadableNotesKept": "To keep them intact, nothing you change now is saved. Close and reopen the app to try again."
+  "unreadableNotesKept": "To keep them intact, nothing you change now is saved. Close and reopen the app to try again.",
+  "backupPasswordExportTitle": "Protect the backup with a password",
+  "backupPasswordExportDescription": "Only this password opens the file. Without it the backup can't be restored, so keep it somewhere safe, like a password manager.",
+  "backupPasswordExportConfirm": "Save backup",
+  "backupPasswordImportTitle": "This backup has a password",
+  "backupPasswordImportDescription": "Enter the password it was saved with.",
+  "backupPasswordImportConfirm": "Open",
+  "backupPassword": "Password",
+  "backupPasswordRepeat": "Repeat password",
+  "backupPasswordTooShort": "Use at least 8 characters.",
+  "backupPasswordMismatch": "The passwords don't match.",
+  "backupPasswordWrong": "Wrong password, or the file is damaged."
 }

@@ -6,6 +6,7 @@ import {
   LanguageSection,
   SecuritySection,
 } from "@maat-apps/ui/settings-sections";
+import { useBackupPasswords } from "../../hooks/use-backup-passwords";
 import { useInstallPrompt } from "../../hooks/use-install-prompt";
 import { useTranslation } from "../../i18n/use-translation";
 import { appLock } from "../../lib/app-lock";
@@ -16,6 +17,7 @@ import { backups, mergeBackup } from "../../lib/backup";
 export function SettingsPanel() {
   const { t, locale, setLocale } = useTranslation();
   const install = useInstallPrompt();
+  const passwords = useBackupPasswords();
   const [status, setStatus] = useState<string | null>(null);
 
   return (
@@ -46,6 +48,7 @@ export function SettingsPanel() {
       />
       <DataSection
         backups={backups}
+        passwords={passwords}
         onImport={mergeBackup}
         onStatus={setStatus}
         labels={{

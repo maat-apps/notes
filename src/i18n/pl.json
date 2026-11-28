@@ -86,7 +86,7 @@
   "language": "Język",
   "sectionData": "Dane",
   "exportData": "Eksportuj notatki",
-  "exportDataDescription": "Zapisz plik z kopią wszystkich notatek.",
+  "exportDataDescription": "Zapisz plik z kopią wszystkich notatek, chroniony hasłem.",
   "exportAction": "Eksportuj",
   "exportShared": "Kopia udostępniona.",
   "exportDone": "Kopia pobrana.",
@@ -101,5 +101,16 @@
   "done": "Gotowe",
   "unreadableNotesTitle": "Nie udało się odczytać zapisanych notatek",
   "unreadableNotesMoved": "Zostały odłożone bez zmian, więc nic ich nie nadpisze. Nowe notatki zapisują się normalnie.",
-  "unreadableNotesKept": "Żeby niczego nie nadpisać, zmiany nie są teraz zapisywane. Zamknij i otwórz aplikację, żeby spróbować ponownie."
+  "unreadableNotesKept": "Żeby niczego nie nadpisać, zmiany nie są teraz zapisywane. Zamknij i otwórz aplikację, żeby spróbować ponownie.",
+  "backupPasswordExportTitle": "Zabezpiecz kopię hasłem",
+  "backupPasswordExportDescription": "Tylko to hasło otworzy plik. Bez niego kopii nie da się przywrócić, więc zapisz je w bezpiecznym miejscu, np. w menedżerze haseł.",
+  "backupPasswordExportConfirm": "Zapisz kopię",
+  "backupPasswordImportTitle": "Ta kopia ma hasło",
+  "backupPasswordImportDescription": "Wpisz hasło, którym ją zapisano.",
+  "backupPasswordImportConfirm": "Otwórz",
+  "backupPassword": "Hasło",
+  "backupPasswordRepeat": "Powtórz hasło",
+  "backupPasswordTooShort": "Użyj co najmniej 8 znaków.",
+  "backupPasswordMismatch": "Hasła się nie zgadzają.",
+  "backupPasswordWrong": "Złe hasło albo uszkodzony plik."
 }

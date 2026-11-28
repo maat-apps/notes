@@ -37,6 +37,35 @@ describe("backup", () => {
     expect(storage.getNotesSnapshot()).toHaveLength(1);
   });
 
+  it("round-trips the notes through a password-protected file", async () => {
+    const { storage, backup } = await freshBackup();
+    storage.saveNote(note);
+    const file = await backup.backups.encryptedFile("long password");
+    const text = await file.text();
+    storage.replaceAllNotes([]);
+
+    backup.applyBackup(
+      await backup.backups.parseWithPassword(text, "long password"),
+    );
+
+    expect(text).not.toContain("Milk");
+    expect(storage.getNotesSnapshot()).toEqual([
+      expect.objectContaining({ id: "n1" }),
+    ]);
+  });
+
+  it("refuses a protected file with the wrong password, or none", async () => {
+    const { backup } = await freshBackup();
+    const text = await (await backup.backups.encryptedFile("right one")).text();
+
+    await expect(
+      backup.backups.parseWithPassword(text, "wrong one"),
+    ).rejects.toThrow("Wrong password, or the file is damaged.");
+    expect(() => backup.parseBackup(text)).toThrow(
+      "The backup has a password.",
+    );
+  });
+
   it("merges a backup into the notes already on the device", async () => {
     const { storage, backup } = await freshBackup();
     storage.saveNote(note);

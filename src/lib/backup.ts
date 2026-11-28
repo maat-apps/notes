@@ -26,6 +26,8 @@ export const backups = createLocalBackup({
   messages: {
     notJson: "The file is not valid JSON.",
     wrongApp: "The file is not a notes backup.",
+    passwordRequired: "The backup has a password.",
+    wrongPassword: "Wrong password, or the file is damaged.",
   },
   snapshot: {
     storage: keyValueStore,
