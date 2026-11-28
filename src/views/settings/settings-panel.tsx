@@ -13,6 +13,8 @@ import { appLock } from "../../lib/app-lock";
 import { appSettings } from "../../lib/app-settings";
 import { backups, mergeBackup } from "../../lib/backup";
 
+import { SetAsideNotesRow } from "./set-aside-notes-row";
+
 // Every section is @maat-apps/ui's, as in every app; the strings are notes'.
 export function SettingsPanel() {
   const { t, locale, setLocale } = useTranslation();
@@ -68,7 +70,9 @@ export function SettingsPanel() {
           importDone: t("importDone"),
           cancel: t("cancel"),
         }}
-      />
+      >
+        <SetAsideNotesRow onStatus={setStatus} />
+      </DataSection>
       <AppSection
         install={install}
         updateApp={backups.updateApp}

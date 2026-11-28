@@ -80,3 +80,18 @@ describe("useUnreadableNotes", () => {
     });
   });
 });
+
+describe("useSetAsideCount", () => {
+  it("counts the notes put away once loaded", async () => {
+    vi.resetModules();
+    const { kvSet } = await import("@/lib/idb-store");
+    await kvSet("notes-data-unreadable", { setAside: [{ value: "a" }] });
+    const { useSetAsideCount } = await import("@/hooks/use-notes");
+    const storage = await import("@/lib/storage");
+    const { result } = renderHook(() => useSetAsideCount());
+
+    await act(() => storage.whenLoaded());
+
+    expect(result.current).toBe(1);
+  });
+});

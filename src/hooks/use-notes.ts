@@ -6,6 +6,7 @@ import type { Note } from "../lib/schemas";
 import {
   getNotesSnapshot,
   getServerNotesSnapshot,
+  getSetAsideCount,
   getUnreadableNotes,
   isNotesReady,
   isNotesReadyOnServer,
@@ -38,5 +39,16 @@ export function useUnreadableNotes(): UnreadableStoredValue | null {
     subscribe,
     getUnreadableNotes,
     nothingUnreadableOnServer,
+  );
+}
+
+const noneSetAsideOnServer = () => 0;
+
+/** How many sets of notes are put away — see storage.ts. */
+export function useSetAsideCount(): number {
+  return useSyncExternalStore(
+    subscribe,
+    getSetAsideCount,
+    noneSetAsideOnServer,
   );
 }

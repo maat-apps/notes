@@ -112,5 +112,13 @@
   "backupPasswordRepeat": "Repeat password",
   "backupPasswordTooShort": "Use at least 8 characters.",
   "backupPasswordMismatch": "The passwords don't match.",
-  "backupPasswordWrong": "Wrong password, or the file is damaged."
+  "backupPasswordWrong": "Wrong password, or the file is damaged.",
+  "setAsideWarningTitle": "Your notes will be put away",
+  "setAsideWarningDescription": "Your notes are encrypted and only a working fingerprint unlock can open them. Turning off the lock now puts them away, still encrypted, and the app starts empty. If this fingerprint works again, you can bring them back in Settings.",
+  "setAsideConfirm": "Put away and continue",
+  "setAsideNotes": "Notes put away",
+  "setAsideNotesDescription": "Encrypted notes put away when the lock was turned off ({count}). Open them with the fingerprint they were saved with.",
+  "setAsideNotesAction": "Open",
+  "setAsideNotesRecovered": "Notes brought back.",
+  "setAsideNotesFailed": "They didn't open. Use the fingerprint they were saved with."
 }

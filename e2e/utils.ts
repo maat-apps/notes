@@ -1,7 +1,10 @@
 // Reusable Playwright test helpers — plain functions specs call directly,
 // not test.extend() fixtures (hence "utils.ts", not "fixtures.ts" — see
 // maat-core/STRUCTURE.md's Testing section for why that naming matters).
-import { readStored } from "@maat-apps/config/playwright";
+import {
+  installPrfAuthenticator,
+  readStored,
+} from "@maat-apps/config/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function goHome(page: Page) {
@@ -126,4 +129,33 @@ export async function waitForStoredOrder(page: Page) {
       );
     })
     .toBe(true);
+}
+
+// Read by the init script below on every get(); survives reloads.
+const FINGERPRINT_FAILS_KEY = "e2e-fingerprint-fails";
+
+/**
+ * A Chromium virtual authenticator with PRF (`installPrfAuthenticator`),
+ * whose fingerprint can be made not to be recognised: `get()` then rejects
+ * the way the platform does. Done in the page rather than through the
+ * authenticator, which stays refusing once a check has failed.
+ */
+export async function installControllableFingerprint(page: Page): Promise<{
+  setRecognised: (recognised: boolean) => Promise<void>;
+}> {
+  await installPrfAuthenticator(page);
+  await page.addInitScript((key) => {
+    const get = navigator.credentials.get.bind(navigator.credentials);
+    navigator.credentials.get = (options) =>
+      localStorage.getItem(key) === "true"
+        ? Promise.reject(new DOMException("Not recognised", "NotAllowedError"))
+        : get(options);
+  }, FINGERPRINT_FAILS_KEY);
+  return {
+    setRecognised: (recognised) =>
+      page.evaluate(
+        ([key, fails]) => localStorage.setItem(key, String(fails)),
+        [FINGERPRINT_FAILS_KEY, !recognised] as const,
+      ),
+  };
 }
