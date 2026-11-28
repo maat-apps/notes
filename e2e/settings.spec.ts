@@ -27,6 +27,7 @@ test("a backup is saved with a password and only opens with it", async ({
   await goHome(page);
   await createTextNote(page, { title: "Keep me" });
   await openSettings(page);
+  await expect(page.getByText(/No backup yet\./)).toBeVisible();
 
   await page.getByRole("button", { name: "Export" }).click();
   const protect = page.getByRole("dialog", {
@@ -45,6 +46,7 @@ test("a backup is saved with a password and only opens with it", async ({
   const download = await downloadPromise;
   const backup = await readFile(await download.path());
   expect(backup.toString()).not.toContain("Keep me");
+  await expect(page.getByText(/Last backup: today\./)).toBeVisible();
 
   // Wipe by deleting the note, then bring it back from the file.
   await page.keyboard.press("Escape");

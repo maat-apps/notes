@@ -120,5 +120,7 @@
   "setAsideNotesDescription": "Encrypted notes put away when the lock was turned off ({count}). Open them with the fingerprint they were saved with.",
   "setAsideNotesAction": "Open",
   "setAsideNotesRecovered": "Notes brought back.",
-  "setAsideNotesFailed": "They didn't open. Use the fingerprint they were saved with."
+  "setAsideNotesFailed": "They didn't open. Use the fingerprint they were saved with.",
+  "lastBackup": "Last backup: {age}.",
+  "noBackupYet": "No backup yet. If the fingerprint stops working, a backup is the only way back to your notes."
 }

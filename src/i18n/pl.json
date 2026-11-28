@@ -120,5 +120,7 @@
   "setAsideNotesDescription": "Zaszyfrowane notatki odłożone przy wyłączeniu blokady ({count}). Otwórz je odciskiem, którym je zapisano.",
   "setAsideNotesAction": "Otwórz",
   "setAsideNotesRecovered": "Notatki przywrócone.",
-  "setAsideNotesFailed": "Nie udało się ich otworzyć. Użyj odcisku, którym je zapisano."
+  "setAsideNotesFailed": "Nie udało się ich otworzyć. Użyj odcisku, którym je zapisano.",
+  "lastBackup": "Ostatnia kopia: {age}.",
+  "noBackupYet": "Nie masz jeszcze kopii. Jeśli odcisk przestanie działać, tylko kopia pozwoli odzyskać notatki."
 }
